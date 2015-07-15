@@ -35,64 +35,84 @@
 #       You are required to attribute the work as explained in the "Usage and
 #       Attribution" section of <http://foxel.ch/license>.
 
-# SRM standard variables #
-SRM_STDCMD="$(basename $0)"
-SRM_HASCMD="$(basename $0)"
-SRM_MPOINT="/data/"
+    # SRM standard variables #
+    SRM_STDCMD="$(basename $0)"
+    SRM_HASCMD="$(basename $0)"
+    SRM_MPOINT="/data/"
 
 # Argument and parameter parser
 #
 # This function simply reads the arguments and parameter and stores the
 # parameters in the configured variables.
 
-function srm_arg() {
+    function srm_arg() {
 
-    # Parses the arguments and parameters #
-    while [[ $# > 0 ]]; do
+        # Parses the arguments and parameters #
+        while [[ $# > 0 ]]; do
 
-        # Push token and update cursor #
-        srm_arg="$1"; shift
-        srm_prm="$1"; shift
+            # Push token and update cursor #
+            srm_arg="$1"; shift
+            srm_prm="$1"; shift
 
-        # Switch on arguments #
-        case $srm_push in
+            # Switch on arguments #
+            case $srm_push in
 
-            --mount-point)
-                SRM_MPOINT="$srm_prm"
-            ;;
+                --mount-point)
+                    SRM_MPOINT="$srm_prm"
+                ;;
 
-        esac
+            esac
 
-        # Compose standard command #
-        SRM_STDCMD="$SRM_STDCMD $srm_arg $srm_prm"
+            # Compose standard command #
+            SRM_STDCMD="$SRM_STDCMD $srm_arg $srm_prm"
 
-        # Detects argument and parameter not to consider in hash computation #
-        if [ "${srm_arg:1:1}" != "-" ]; then 
+            # Detects argument and parameter not to consider in hash computation #
+            if [ "${srm_arg:1:1}" != "-" ]; then 
 
-            # Compose hash command #
-            SRM_HASCMD="$SRM_HASCMD $srm_arg $srm_prm"; 
+                # Compose hash command #
+                SRM_HASCMD="$SRM_HASCMD $srm_arg $srm_prm"; 
 
-        fi
+            fi
 
-    done
+        done
 
-}
+    }
 
 # Message display
 #
 # This function simply display the string provdided as parameter on the standard
 # error output.
 
-function srm_echo() {
+    function srm_echo() {
 
-    # Display message on standard error output #
-    >&2 echo "$1"
-    
-}
+        # Display message on standard error output #
+        >&2 echo "$1"
+        
+    }
+
+# Module hash computation
+#
+# This function computes the hash used to define the srm module in the storage
+# structure. An SHA256 is considered as hash algorithm and only the 16 first
+# hexadecimal digits of the hash are kept.
+
+    function srm_hash() {
+
+        # Compute the sha256 sum #
+        SRM_SHASUM=$(echo "$1" | sha256sum)
+
+        # Return truncated sha256 sum #
+        echo "${SRM_SHASUM:0:16}"
+
+    }
 
 # Argument and parameter parser #
 srm_arg $@
 
+# Compute module hash sum #
+SRM_MDHASH=$(srm_hash "$SRM_HASCMD")
+
 srm_echo "Command : $SRM_STDCMD"
 srm_echo "Hashcmd : $SRM_HASCMD"
+srm_echo "Hash    : $SRM_MDHASH"
 
