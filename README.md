@@ -2,9 +2,9 @@
 ## Standard refinement modules<br />Kernel modules
 
 <p align="justify">
-The standardized refinement modules are the FOXEL data processing user front-end
-interface. They are each responsible of the processing of their task providing
-a standardized interface.
+The standard refinement modules are the FOXEL data processing user front-end
+interface. They are responsible of the processing of their task providing a
+standardized interface.
 </p>
 
 <p align="justify">
