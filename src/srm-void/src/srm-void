@@ -36,6 +36,8 @@
 #       Attribution" section of <http://foxel.ch/license>.
 
 # SRM standard variables #
+SRM_STDCMD="$(basename $0)"
+SRM_HASCMD="$(basename $0)"
 SRM_MPOINT="/data/"
 
 # Argument and parameter parser
@@ -49,15 +51,28 @@ function srm_arg() {
     while [[ $# > 0 ]]; do
 
         # Push token and update cursor #
-        srm_push="$1"; shift
+        srm_arg="$1"; shift
+        srm_prm="$1"; shift
 
         # Switch on arguments #
         case $srm_push in
 
             --mount-point)
-                SRM_MPOINT="$1"; shift
+                SRM_MPOINT="$srm_prm"
+            ;;
 
         esac
+
+        # Compose standard command #
+        SRM_STDCMD="$SRM_STDCMD $srm_arg $srm_prm"
+
+        # Detects argument and parameter not to consider in hash computation #
+        if [ "${srm_arg:1:1}" != "-" ]; then 
+
+            # Compose hash command #
+            SRM_HASCMD="$SRM_HASCMD $srm_arg $srm_prm"; 
+
+        fi
 
     done
 
@@ -71,7 +86,13 @@ function srm_arg() {
 function srm_echo() {
 
     # Display message on standard error output #
-    >&2 echo $1
+    >&2 echo "$1"
     
 }
+
+# Argument and parameter parser #
+srm_arg $@
+
+srm_echo "Command : $SRM_STDCMD"
+srm_echo "Hashcmd : $SRM_HASCMD"
 

@@ -4,7 +4,7 @@
 #
 
     all:directories
-	#cp src/* bin/*
+	cp src/srm-void bin/srm-void
 
 #
 #   make - directories
