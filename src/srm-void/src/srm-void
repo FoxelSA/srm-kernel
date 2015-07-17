@@ -40,6 +40,9 @@
     SRM_HASCMD="$(basename $0)"
     SRM_MPOINT="/data/"
 
+    # SRM refinement address #
+    SRM_ADDRES=""
+
 # Argument and parameter parser
 #
 # This function simply reads the arguments and parameter and stores the
@@ -55,10 +58,14 @@
             srm_prm="$1"; shift
 
             # Switch on arguments #
-            case $srm_push in
+            case $srm_arg in
 
                 --mount-point)
                     SRM_MPOINT="$srm_prm"
+                ;;
+
+                --address)
+                    SRM_ADDRES="$SRM_ADDRES $srm_prm"
                 ;;
 
             esac
@@ -102,7 +109,7 @@
         SRM_SHASUM=$(echo "$1" | sha256sum)
 
         # Return truncated sha256 sum #
-        echo "${SRM_SHASUM:0:16}"
+        echo "${SRM_SHASUM:0:12}"
 
     }
 
@@ -115,4 +122,5 @@ SRM_MDHASH=$(srm_hash "$SRM_HASCMD")
 srm_echo "Command : $SRM_STDCMD"
 srm_echo "Hashcmd : $SRM_HASCMD"
 srm_echo "Hash    : $SRM_MDHASH"
+srm_echo "ADDRs   : $SRM_ADDRES"
 
