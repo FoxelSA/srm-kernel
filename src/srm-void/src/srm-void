@@ -165,6 +165,21 @@
 
     }
 
+# Timestamp hash
+#
+# This function returns the hashed (truncated) timestamp value for any given
+# timestamp according to the storage structure standards.
+
+    function srm_tshash() {
+
+        # Retrieve unix timestamp #
+        SRM_UNIXTS=(${1//_/ })
+
+        # Returns hashed timestmap #
+        echo $(( ${SRM_UNIXTS[0]} / 100 ))
+
+    }
+
 # Module processing
 #
 # The following instruction are responsible of applying the required processing
