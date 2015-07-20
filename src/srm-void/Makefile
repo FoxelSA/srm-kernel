@@ -4,7 +4,7 @@
 #
 
     all:directories
-	cp src/srm-void bin/srm-void
+	cp src/srm-template bin/srm-template
 
 #
 #   make - directories
