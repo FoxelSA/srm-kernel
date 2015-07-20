@@ -41,7 +41,7 @@
     SRM_MPOINT="/data/"
     SRM_MDMODE="default"
     SRM_ICLASS="eyesis4pi-raw"
-    SRM_OCLASS="not-yet-decided"
+    SRM_OCLASS="template-module"
 
     # SRM refinement address #
     SRM_ADDRES=""
@@ -127,6 +127,41 @@
 
         # Return truncated sha256 sum #
         echo "${SRM_SHASUM:0:12}"
+
+    }
+
+# Module ram file system management
+#
+# This function creates a temporary ram file system for the module processing
+# requirement. It also allows to delete the file system as the module ends it
+# processing.
+
+    function srm_tmpfs() {
+
+        # Create file system mount point #
+        SRM_RFSDIR=/tmp/$(echo "$SRM_STDCMD" | sha256sum)
+
+        # Checks management mode #
+        if [ "$1" == "create" ]; then
+
+            # Create file system directory #
+            mkdir -p $SRM_RFSDIR
+
+            # Create file system #
+            mount -t tmpfs -o size=$2 tmpfs $SRM_RFSDIR
+
+        elif [ "$1" == "delete" ]; then
+
+            # Delete file system #
+            umount $SRM_RFSDIR
+
+            # Delete file system directory #
+            rmdir $SRM_RFSDIR
+
+        fi
+
+        # Returns file system mount point #
+        echo $SRM_RFSDIR
 
     }
 
