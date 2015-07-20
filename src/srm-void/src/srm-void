@@ -113,14 +113,41 @@
 
     }
 
-# Argument and parameter parser #
-srm_arg $@
+# Module processing
+#
+# The following instruction are responsible of applying the required processing
+# on the data referenced by the command line addresses.
 
-# Compute module hash sum #
-SRM_MDHASH=$(srm_hash "$SRM_HASCMD")
+    # Argument and parameter parser #
+    srm_arg $@
 
-srm_echo "Command : $SRM_STDCMD"
-srm_echo "Hashcmd : $SRM_HASCMD"
-srm_echo "Hash    : $SRM_MDHASH"
-srm_echo "ADDRs   : $SRM_ADDRES"
+    # Compute module hash sum #
+    SRM_MDHASH=$(srm_hash "$SRM_HASCMD")
+
+    # Display module summary #
+    srm_echo "SRM - Kernel : $(basename $0)"
+    srm_echo "    scmd : $SRM_STDCMD"
+    srm_echo "    hcmd : $SRM_HASCMD"
+    srm_echo "    hash : $SRM_MDHASH"
+
+    # SRM loop - addresses #
+    for SRM_RANGES in $SRM_ADDRES; do
+
+        # Display range #
+        srm_echo "SRM - Kernel : address $SRM_RANGES"
+
+        # Decompose string #
+        SRM_ADDARR=(${SRM_RANGES//// })
+        SRM_BOUNDS=(${SRM_ADDARR[3]//-/ })
+
+        # Display address analysis #
+        srm_echo "    maca : ${SRM_ADDARR[0]}"
+        srm_echo "    mast : ${SRM_ADDARR[1]}"
+        srm_echo "    segm : ${SRM_ADDARR[2]}"
+        srm_echo "    boun : ${SRM_BOUNDS[0]} to ${SRM_BOUNDS[1]}"
+
+    done
+
+    # Exit code #
+    exit 0
 
