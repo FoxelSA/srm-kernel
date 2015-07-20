@@ -39,9 +39,18 @@
     SRM_STDCMD="$(basename $0)"
     SRM_HASCMD="$(basename $0)"
     SRM_MPOINT="/data/"
+    SRM_MDMODE="default"
+    SRM_ICLASS="eyesis4pi-raw"
+    SRM_OCLASS="not-yet-decided"
 
     # SRM refinement address #
     SRM_ADDRES=""
+
+    # SRM source node #
+    SRM_SRCNOD=""
+
+    # Exit code #
+    SRM_EXITID=0
 
 # Argument and parameter parser
 #
@@ -66,6 +75,14 @@
 
                 --address)
                     SRM_ADDRES="$SRM_ADDRES $srm_prm"
+                ;;
+
+                --display)
+                    SRM_MDMODE="$srm_prm"
+                ;;
+
+                -n)
+                    SRM_SRCNOD="$srm_prm"
                 ;;
 
             esac
@@ -124,30 +141,86 @@
     # Compute module hash sum #
     SRM_MDHASH=$(srm_hash "$SRM_HASCMD")
 
-    # Display module summary #
-    srm_echo "SRM - Kernel : $(basename $0)"
-    srm_echo "    scmd : $SRM_STDCMD"
-    srm_echo "    hcmd : $SRM_HASCMD"
-    srm_echo "    hash : $SRM_MDHASH"
+    # Module mode switch #
+    if [ "$SRM_MDMODE" == "default" ]; then
 
-    # SRM loop - addresses #
-    for SRM_RANGES in $SRM_ADDRES; do
+        # Check source node availability #
+        if [ ! -d $SRM_MPOINT/poses/$SRM_SRCNOD/ ]; then
 
-        # Display range #
-        srm_echo "SRM - Kernel : address $SRM_RANGES"
+            # Display message #
+            srm_echo "SRM - Kernel : Error, unknown source node"; SRM_EXITID=1
 
-        # Decompose string #
-        SRM_ADDARR=(${SRM_RANGES//// })
-        SRM_BOUNDS=(${SRM_ADDARR[3]//-/ })
+        else
 
-        # Display address analysis #
-        srm_echo "    maca : ${SRM_ADDARR[0]}"
-        srm_echo "    mast : ${SRM_ADDARR[1]}"
-        srm_echo "    segm : ${SRM_ADDARR[2]}"
-        srm_echo "    boun : ${SRM_BOUNDS[0]} to ${SRM_BOUNDS[1]}"
+            # Check source data classification #
+            if [ ! -e $SRM_MPOINT/poses/$SRM_SRCNOD/info/$SRM_ICLASS ]; then
 
-    done
+                # Display message #
+                srm_echo "SRM - Kernel : Error, invalid source classification"; SRM_EXITID=1
+
+            else
+
+                # Display module summary #
+                srm_echo "SRM - Kernel : $(basename $0)"
+                srm_echo "    scmd : $SRM_STDCMD"
+                srm_echo "    hcmd : $SRM_HASCMD"
+                srm_echo "    hash : $SRM_MDHASH"
+                srm_echo "    dsrc : $SRM_SRCNOD"
+
+                # SRM loop - addresses #
+                for SRM_RANGES in $SRM_ADDRES; do
+
+                    # Display range #
+                    srm_echo "SRM - Kernel : address $SRM_RANGES"
+
+                    # Decompose string #
+                    SRM_ADDARR=(${SRM_RANGES//// })
+                    SRM_BOUNDS=(${SRM_ADDARR[3]//-/ })
+
+                    # Display address analysis #
+                    srm_echo "    maca : ${SRM_ADDARR[0]}"
+                    srm_echo "    mast : ${SRM_ADDARR[1]}"
+                    srm_echo "    segm : ${SRM_ADDARR[2]}"
+                    srm_echo "    boun : ${SRM_BOUNDS[0]} to ${SRM_BOUNDS[1]}"
+
+                done
+
+            fi
+
+        fi
+
+    elif [ "$SRM_MDMODE" == "list-nodes" ]; then
+
+        # Display available input nodes #
+        for SRM_INODES in $SRM_MPOINT/poses/*; do
+
+            # Detects directories #
+            if [ -e $SRM_INODES/info/$SRM_ICLASS ]; then
+
+                # Display source node #
+                srm_echo "$(basename $SRM_INODES)"
+
+            fi
+
+        done
+
+    elif [ "$SRM_MDMODE" == "input-classification" ]; then
+
+        # Display module classification #
+        srm_echo "$SRM_ICLASS"
+
+    elif [ "$SRM_MDMODE" == "output-classification" ]; then
+
+        # Display module classification #
+        srm_echo "$SRM_OCLASS"
+
+    else
+
+        # Display message #
+        srm_echo "SRM - Kernel : Error, invalid module mode"; SRM_EXITID=1
+
+    fi
 
     # Exit code #
-    exit 0
+    exit $SRM_EXITID
 
