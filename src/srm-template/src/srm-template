@@ -35,34 +35,39 @@
 #       You are required to attribute the work as explained in the "Usage and
 #       Attribution" section of <http://foxel.ch/license>.
 
-    # SRM standard variables #
-    SRM_STDCMD="$(basename $0)"
-    SRM_HASCMD="$(basename $0)"
-    SRM_MPOINT="/data/"
-    SRM_MDMODE="default"
-    SRM_ICLASS="eyesis4pi-raw"
-    SRM_OCLASS="template-module"
+    # Module io classification variables #
+    SRM_IO_INPUT="eyesis4pi-raw"
+    SRM_IO_OUTPUT="template-module"
 
-    # SRM refinement address #
-    SRM_ADDRES=""
+    # Command variables #
+    SRM_CMD_NORM="$(basename $0)"
+    SRM_CMD_HASH="$(basename $0)"
 
-    # SRM source node #
-    SRM_SRCNOD=""
+    # Storage structure variables #
+    SRM_MNT_BASE="/data/"    
 
-    # Exit code #
-    SRM_EXITID=0
+    # Module execution variables #
+    SRM_MOD_EXEC="default"
+    SRM_MOD_MMSR=""
+    SRM_MOD_NODE=""
+    SRM_MOD_SRAM="0M"
 
-# Argument and parameter parser
+    # Module execution variables #
+    SRM_EID_EXIT=0
+
+# Argument and parameter
 #
-# This function simply reads the arguments and parameter and stores the
-# parameters in the configured variables.
+# This function reads the module script arguments and parameters using the
+# assuption that every argument always comes with a unique parameter. Moreover
+# this function creates and normalized and simplified representation of the
+# script command.
 
     function srm_arg() {
 
         # Parses the arguments and parameters #
         while [[ $# > 0 ]]; do
 
-            # Push token and update cursor #
+            # Push token and update head #
             srm_arg="$1"; shift
             srm_prm="$1"; shift
 
@@ -70,31 +75,31 @@
             case $srm_arg in
 
                 --mount-point)
-                    SRM_MPOINT="$srm_prm"
+                    SRM_MNT_BASE="$srm_prm"
                 ;;
 
                 --address)
-                    SRM_ADDRES="$SRM_ADDRES $srm_prm"
+                    SRM_MOD_MMSR="$SRM_MOD_MMSR $srm_prm"
                 ;;
 
                 --display)
-                    SRM_MDMODE="$srm_prm"
+                    SRM_MOD_EXEC="$srm_prm"
                 ;;
 
                 -n)
-                    SRM_SRCNOD="$srm_prm"
+                    SRM_MOD_NODE="$srm_prm"
                 ;;
 
             esac
 
-            # Compose standard command #
-            SRM_STDCMD="$SRM_STDCMD $srm_arg $srm_prm"
+            # Compose normalized command #
+            SRM_CMD_NORM="$SRM_CMD_NORM $srm_arg $srm_prm"
 
-            # Detects argument and parameter not to consider in hash computation #
+            # Filter arguments and parameters #
             if [ "${srm_arg:1:1}" != "-" ]; then 
 
-                # Compose hash command #
-                SRM_HASCMD="$SRM_HASCMD $srm_arg $srm_prm"; 
+                # Compose simplified command #
+                SRM_CMD_HASH="$SRM_CMD_HASH $srm_arg $srm_prm"; 
 
             fi
 
@@ -104,134 +109,142 @@
 
 # Message display
 #
-# This function simply display the string provdided as parameter on the standard
-# error output.
+# The following function simply displays the string provdided as parameter using
+# the standard error output.
 
     function srm_echo() {
 
-        # Display message on standard error output #
+        # Display message #
         >&2 echo "$1"
         
     }
 
-# Module hash computation
+# Module hash
 #
-# This function computes the hash used to define the srm module in the storage
-# structure. An SHA256 is considered as hash algorithm and only the 16 first
-# hexadecimal digits of the hash are kept.
+# This function computes the hash used to identify the module processing results
+# in the storage structure. An SHA256 sum is considered as hash algorithm and
+# only the 16 first hexadecimal digits of the hash are kept.
 
     function srm_hash() {
 
-        # Compute the sha256 sum #
-        SRM_SHASUM=$(echo "$1" | sha256sum)
+        # Compute SHA256 sum #
+        SRM_SHA_S256=$(echo "$1" | sha256sum)
 
-        # Return truncated sha256 sum #
-        echo "${SRM_SHASUM:0:12}"
+        # Return truncated SHA256 sum #
+        echo "${SRM_SHA_S256:0:16}"
 
     }
 
-# Module ram file system management
+# Temporary file system
 #
-# This function creates a temporary ram file system for the module processing
-# requirement. It also allows to delete the file system as the module ends it
-# processing.
+# This function creates a temporary file system (tmpfs) in case module requires
+# fast-access storage. It also allows to delete the file system as the module
+# ends its task.
 
     function srm_tmpfs() {
 
-        # Create file system mount point #
-        SRM_RFSDIR=/tmp/$(echo "$SRM_STDCMD" | sha256sum)
+        # Create temporary storage name #
+        SRM_TMP_NAME=/tmp/$(echo "$SRM_CMD_NORM" | sha256sum)
 
-        # Checks management mode #
+        # Temporary storage management #
         if [ "$1" == "create" ]; then
 
-            # Create file system directory #
-            mkdir -p $SRM_RFSDIR
+            # Check temporary storage requirement #
+            if [ "$2" -ne "0M" ]; then
 
-            # Create file system #
-            mount -t tmpfs -o size=$2 tmpfs $SRM_RFSDIR
+                # Create file system #
+                mkdir -p $SRM_TMP_NAME
+                mount -t tmpfs -o size=$2 tmpfs $SRM_TMP_NAME
+
+            fi
 
         elif [ "$1" == "delete" ]; then
 
-            # Delete file system #
-            umount $SRM_RFSDIR
+            # Check on mounted file system #
+            if mount | grep SRM_TMP_NAME > /dev/null; then
 
-            # Delete file system directory #
-            rmdir $SRM_RFSDIR
+                # Delete file system #
+                umount $SRM_TMP_NAME
+                rmdir  $SRM_TMP_NAME --ignore-fail-on-non-empty
+
+            fi
 
         fi
 
         # Returns file system mount point #
-        echo $SRM_RFSDIR
+        echo $SRM_TMP_NAME
 
     }
 
-# Timestamp hash
+# Timestamps simple hashing
 #
-# This function returns the hashed (truncated) timestamp value for any given
-# timestamp according to the storage structure standards.
+# This function returns the hashed (truncated) timestamps value for any given
+# timestamp according to the storage structure standards. It corresponds to a
+# simple division by ten.
 
     function srm_tshash() {
 
-        # Retrieve unix timestamp #
-        SRM_UNIXTS=(${1//_/ })
+        # Retrieve unix timestamp - if composed #
+        SRM_TS_UNIX=(${1//_/ })
 
         # Returns hashed timestmap #
-        echo $(( ${SRM_UNIXTS[0]} / 100 ))
+        echo $(( ${SRM_TS_UNIX[0]} / 100 ))
 
     }
 
-# Module processing
+# Module main function
 #
-# The following instruction are responsible of applying the required processing
-# on the data referenced by the command line addresses.
+# The following instructions are responsible of performing the tasks the module
+# is supposed to do. This main function is also responsible of the management of
+# errors and the exit message to the system.
 
-    # Argument and parameter parser #
+    # Argument and parameter #
     srm_arg $@
 
-    # Compute module hash sum #
-    SRM_MDHASH=$(srm_hash "$SRM_HASCMD")
+    # Module hash #
+    SRM_MOD_HASH=$(srm_hash "$SRM_CMD_HASH")
 
-    # Module mode switch #
-    if [ "$SRM_MDMODE" == "default" ]; then
+    # Module execution switch #
+    if [ "$SRM_MOD_EXEC" == "default" ]; then
 
         # Check source node availability #
-        if [ ! -d $SRM_MPOINT/poses/$SRM_SRCNOD/ ]; then
+        if [ ! -d $SRM_MNT_BASE/poses/$SRM_MOD_NODE/ ]; then
 
             # Display message #
-            srm_echo "SRM - Kernel : Error, unknown source node"; SRM_EXITID=1
+            srm_echo "SRM Kernel : Error, unknown source node"; SRM_EID_EXIT=1
 
         else
 
             # Check source data classification #
-            if [ ! -e $SRM_MPOINT/poses/$SRM_SRCNOD/info/$SRM_ICLASS ]; then
+            if [ ! -e $SRM_MNT_BASE/poses/$SRM_MOD_NODE/info/$SRM_IO_INPUT ]; then
 
                 # Display message #
-                srm_echo "SRM - Kernel : Error, invalid source classification"; SRM_EXITID=1
+                srm_echo "SRM Kernel : Error, invalid source classification"; SRM_EID_EXIT=1
 
             else
 
                 # Display module summary #
-                srm_echo "SRM - Kernel : $(basename $0)"
-                srm_echo "    scmd : $SRM_STDCMD"
-                srm_echo "    hcmd : $SRM_HASCMD"
-                srm_echo "    hash : $SRM_MDHASH"
-                srm_echo "    dsrc : $SRM_SRCNOD"
+                srm_echo "SRM Kernel : $(basename $0)"
+                srm_echo "    cmd : $SRM_CMD_NORM"
+                srm_echo "    sha : $SRM_CMD_HASH"
+                srm_echo "    has : $SRM_MOD_HASH"
+                srm_echo "    src : $SRM_MOD_NODE"
 
-                # SRM loop - addresses #
-                for SRM_RANGES in $SRM_ADDRES; do
+                # Parse mmsr addresses #
+                for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
 
-                    # Display range #
-                    srm_echo "SRM - Kernel : address $SRM_RANGES"
+                    # Display mmsr address #
+                    srm_echo "SRM Kernel : address $SRM_EXE_MSSR"
 
-                    # Decompose string #
-                    SRM_ADDARR=(${SRM_RANGES//// })
-                    SRM_BOUNDS=(${SRM_ADDARR[3]//-/ })
+                    # Decompose mmsr address #
+                    SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
+                    SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
 
-                    # Display address analysis #
-                    srm_echo "    maca : ${SRM_ADDARR[0]}"
-                    srm_echo "    mast : ${SRM_ADDARR[1]}"
-                    srm_echo "    segm : ${SRM_ADDARR[2]}"
-                    srm_echo "    boun : ${SRM_BOUNDS[0]} to ${SRM_BOUNDS[1]}"
+                    # Display decomposed mmsr address #
+                    srm_echo "    mac : ${SRM_ADD_MAIN[0]}"
+                    srm_echo "    mas : ${SRM_ADD_MAIN[1]}"
+                    srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
+                    srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
 
                 done
 
@@ -239,38 +252,38 @@
 
         fi
 
-    elif [ "$SRM_MDMODE" == "list-nodes" ]; then
+    elif [ "$SRM_MOD_EXEC" == "list-nodes" ]; then
 
         # Display available input nodes #
-        for SRM_INODES in $SRM_MPOINT/poses/*; do
+        for SRM_NOD_INPUT in $SRM_MNT_BASE/poses/*; do
 
             # Detects directories #
-            if [ -e $SRM_INODES/info/$SRM_ICLASS ]; then
+            if [ -e $SRM_NOD_INPUT/info/$SRM_IO_INPUT ]; then
 
                 # Display source node #
-                srm_echo "$(basename $SRM_INODES)"
+                srm_echo "$(basename $SRM_NOD_INPUT)"
 
             fi
 
         done
 
-    elif [ "$SRM_MDMODE" == "input-classification" ]; then
+    elif [ "$SRM_MOD_EXEC" == "input-classification" ]; then
 
         # Display module classification #
-        srm_echo "$SRM_ICLASS"
+        srm_echo "$SRM_IO_INPUT"
 
-    elif [ "$SRM_MDMODE" == "output-classification" ]; then
+    elif [ "$SRM_MOD_EXEC" == "output-classification" ]; then
 
         # Display module classification #
-        srm_echo "$SRM_OCLASS"
+        srm_echo "$SRM_IO_OUTPUT"
 
     else
 
         # Display message #
-        srm_echo "SRM - Kernel : Error, invalid module mode"; SRM_EXITID=1
+        srm_echo "SRM - Kernel : Error, invalid module mode"; SRM_EID_EXIT=1
 
     fi
 
     # Exit code #
-    exit $SRM_EXITID
+    exit $SRM_EID_EXIT
 
