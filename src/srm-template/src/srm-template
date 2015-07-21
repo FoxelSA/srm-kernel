@@ -50,7 +50,9 @@
     SRM_MOD_EXEC="default"
     SRM_MOD_MMSR=""
     SRM_MOD_NODE=""
-    SRM_MOD_SRAM="0M"
+
+    # Temporary storage variables #
+    SRM_TMP_NAME=""
 
     # Module execution variables #
     SRM_EID_EXIT=0
@@ -137,42 +139,28 @@
 
 # Temporary file system
 #
-# This function creates a temporary file system (tmpfs) in case module requires
-# fast-access storage. It also allows to delete the file system as the module
-# ends its task.
+# This function creates a temporary storage (tmpfs) in case module requires
+# fast-access storage. It also allows to delete the temporary storage as the
+# module ends its task.
 
     function srm_tmpfs() {
 
         # Create temporary storage name #
-        SRM_TMP_NAME=/tmp/$(echo "$SRM_CMD_NORM" | sha256sum)
+        SRM_TMP_NAME=$(echo "$SRM_CMD_NORM" | sha256sum)
+        SRM_TMP_NAME=/dev/shm/${SRM_TMP_NAME:0:32}
 
         # Temporary storage management #
         if [ "$1" == "create" ]; then
 
-            # Check temporary storage requirement #
-            if [ "$2" -ne "0M" ]; then
-
-                # Create file system #
-                mkdir -p $SRM_TMP_NAME
-                mount -t tmpfs -o size=$2 tmpfs $SRM_TMP_NAME
-
-            fi
+            # Create temporary storage #
+            mkdir -p $SRM_TMP_NAME
 
         elif [ "$1" == "delete" ]; then
 
-            # Check on mounted file system #
-            if mount | grep SRM_TMP_NAME > /dev/null; then
-
-                # Delete file system #
-                umount $SRM_TMP_NAME
-                rmdir  $SRM_TMP_NAME --ignore-fail-on-non-empty
-
-            fi
+            # Delete temporary storage #
+            rm -rf $SRM_TMP_NAME
 
         fi
-
-        # Returns file system mount point #
-        echo $SRM_TMP_NAME
 
     }
 
@@ -223,6 +211,9 @@
 
             else
 
+                # Temporary storage #
+                srm_tmpfs create
+
                 # Display module summary #
                 srm_echo "SRM Kernel : $(basename $0)"
                 srm_echo "    cmd : $SRM_CMD_NORM"
@@ -247,6 +238,9 @@
                     srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
 
                 done
+
+                # Temporary storage #
+                srm_tmpfs delete
 
             fi
 
