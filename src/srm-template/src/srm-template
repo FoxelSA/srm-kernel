@@ -83,11 +83,9 @@
                 --mount-point)
                     SRM_MNT_BASE="$srm_prm"
                 ;;
-
                 --address)
                     SRM_MOD_MMSR="$SRM_MOD_MMSR $srm_prm"
                 ;;
-
                 --display)
                     SRM_MOD_EXEC="$srm_prm"
                 ;;
@@ -257,6 +255,10 @@
     }
 
 # Module node creation #
+#
+# This function initialize the module node directory and file structure and
+# creates information files. When the structure is already initialized, the
+# function only complete required information.
 
     function srm_init() {
 
@@ -268,10 +270,10 @@
         mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH/data
 
         # Module node classification #
-        echo "$SRM_IO_OUTPUT" > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/classification
+        echo $SRM_IO_OUTPUT > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/classification
 
         # Module node simplified commands #
-        echo "$SRM_CMD_HASH" > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/command
+        echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/command
 
         # Module node normalized commands history #
         echo "$(basename $HOME)@$HOSTNAME,$HOSTTYPE,$(lsb_release -si) $(lsb_release -sr),$(date) % $SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/history
@@ -358,8 +360,11 @@
                                 # Update module statistic #
                                 SRM_STA_PROC=$(( $SRM_STA_PROC + 1 ))
 
+                                # Create pose destination #
+                                SRM_EXE_DEST=$SRM_MNT_BASE/pose/$SRM_MOD_HASH/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/$(srm_tshash ${SRM_ADD_MAIN[2]})/$(basename $SRM_EXE_POSE)
+
                                 # Create pose directory #
-                                mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/$(srm_tshash ${SRM_ADD_MAIN[2]})/$(basename $SRM_EXE_POSE)
+                                mkdir -p $SRM_EXE_DEST
 
                             fi
 
