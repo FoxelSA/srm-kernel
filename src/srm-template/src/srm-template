@@ -190,23 +190,26 @@
     function srm_selected() {
 
         # Decompose pose timestamps #
-        SRM_TS_PART=${$1//_/ }
-        SRM_TS_UNIX=${SRM_TS1_PART[0]}
-        SRM_TS_USEC=${SRM_TS1_PART[1]}
+        SRM_TS_PART=(${1//_/ })
+        SRM_TS_UNIX=${SRM_TS_PART[0]}
+        SRM_TS_USEC=${SRM_TS_PART[1]}
 
         # Decompose mmsr downer and upper timestamps #
-        SRM_ML_PART=${$2//_/ }
-        SRM_MH_PART=${$3//_/ }
+        SRM_ML_PART=(${2//_/ })
+        SRM_MH_PART=(${3//_/ })
         SRM_ML_UNIX=${SRM_ML_PART[0]}
         SRM_MH_UNIX=${SRM_MH_PART[0]}
         SRM_ML_USEC=${SRM_ML_PART[1]}
         SRM_MH_USEC=${SRM_MH_PART[1]}
 
+        # Initialize result #
+        SRM_RETURN=1
+
         # Check downer boundary #
         if (( $SRM_TS_UNIX < $SRM_ML_UNIX )); then
 
             # Return result #
-            return 0
+            SRM_RETURN=0
 
         fi
 
@@ -217,7 +220,7 @@
             if (( $SRM_TS_USEC < $SRM_ML_USEC )); then
 
                 # Return result #
-                return 0
+                SRM_RETURN=0
 
             fi
 
@@ -227,7 +230,7 @@
         if (( $SRM_TS_UNIX > $SRM_MH_UNIX )); then
 
             # Return result #
-            return 0
+            SRM_RETURN=0
 
         fi
 
@@ -238,14 +241,14 @@
             if (( $SRM_TS_USEC > $SRM_ML_USEC )); then
 
                 # Return result #
-                return 0
+                SRM_RETURN=0
 
             fi
 
         fi
 
         # Return result #
-        return 1
+        echo $SRM_RETURN
 
     }
 
@@ -304,7 +307,30 @@
                     srm_echo "    mac : ${SRM_ADD_MAIN[0]}"
                     srm_echo "    mas : ${SRM_ADD_MAIN[1]}"
                     srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
-                    srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
+                    srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"; srm_echo ""
+
+                    # Parse mmrs address poses #
+                    for SRM_EXE_POSE in $SRM_MNT_BASE/pose/$SRM_MOD_NODE/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/$(srm_tshash ${SRM_ADD_MAIN[2]})/*; do
+
+                        # Parse only directories #
+                        if [ -d $SRM_EXE_POSE ]; then
+
+                            # Selection on mmsr address #
+                            if (( $(srm_selected $(basename $SRM_EXE_POSE) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
+
+                                # Display pose #
+                                srm_echo "    pos $(basename $SRM_EXE_POSE) - Selected"
+
+                            else
+
+                                # Display pose #
+                                srm_echo "    pos $(basename $SRM_EXE_POSE) - Not selected"
+
+                            fi
+
+                        fi
+
+                    done
 
                 done
 
