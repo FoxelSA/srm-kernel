@@ -180,6 +180,70 @@
 
     }
 
+# Timestamps selection
+
+    function srm_selected() {
+
+        # Decompose pose timestamps #
+        SRM_TS_PART=${$1//_/ }
+        SRM_TS_UNIX=${SRM_TS1_PART[0]}
+        SRM_TS_USEC=${SRM_TS1_PART[1]}
+
+        # Decompose mmsr downer and upper timestamps #
+        SRM_ML_PART=${$2//_/ }
+        SRM_MH_PART=${$3//_/ }
+        SRM_ML_UNIX=${SRM_ML_PART[0]}
+        SRM_MH_UNIX=${SRM_MH_PART[0]}
+        SRM_ML_USEC=${SRM_ML_PART[1]}
+        SRM_MH_USEC=${SRM_MH_PART[1]}
+
+        # Check downer boundary #
+        if (( $SRM_TS_UNIX < $SRM_ML_UNIX )); then
+
+            # Return result #
+            return 0
+
+        fi
+
+        # Check downer boundary #
+        if (( $SRM_TS_UNIX == $SRM_ML_UNIX )); then
+
+            # Check decimale boundary #
+            if (( $SRM_TS_USEC < $SRM_ML_USEC )); then
+
+                # Return result #
+                return 0
+
+            fi
+
+        fi
+
+        # Check upper boundary #
+        if (( $SRM_TS_UNIX > $SRM_MH_UNIX )); then
+
+            # Return result #
+            return 0
+
+        fi
+
+        # Check upper boundary #
+        if (( $SRM_TS_UNIX == $SRM_MH_UNIX )); then
+
+            # Check decimale boundary #
+            if (( $SRM_TS_USEC > $SRM_ML_USEC )); then
+
+                # Return result #
+                return 0
+
+            fi
+
+        fi
+
+        # Return result #
+        return 1
+
+    }
+
 # Module main function
 #
 # The following instructions are responsible of performing the tasks the module
@@ -196,7 +260,7 @@
     if [ "$SRM_MOD_EXEC" == "default" ]; then
 
         # Check source node availability #
-        if [ ! -d $SRM_MNT_BASE/poses/$SRM_MOD_NODE/ ]; then
+        if [ ! -d $SRM_MNT_BASE/pose/$SRM_MOD_NODE/ ]; then
 
             # Display message #
             srm_echo "SRM Kernel : Error, unknown source node"; SRM_EID_EXIT=1
@@ -204,7 +268,7 @@
         else
 
             # Check source data classification #
-            if [ ! -e $SRM_MNT_BASE/poses/$SRM_MOD_NODE/info/$SRM_IO_INPUT ]; then
+            if [ ! -e $SRM_MNT_BASE/pose/$SRM_MOD_NODE/info/$SRM_IO_INPUT ]; then
 
                 # Display message #
                 srm_echo "SRM Kernel : Error, invalid source classification"; SRM_EID_EXIT=1
@@ -249,7 +313,7 @@
     elif [ "$SRM_MOD_EXEC" == "list-nodes" ]; then
 
         # Display available input nodes #
-        for SRM_NOD_INPUT in $SRM_MNT_BASE/poses/*; do
+        for SRM_NOD_INPUT in $SRM_MNT_BASE/pose/*; do
 
             # Detects directories #
             if [ -e $SRM_NOD_INPUT/info/$SRM_IO_INPUT ]; then
