@@ -256,6 +256,29 @@
 
     }
 
+# Module node creation #
+
+    function srm_init() {
+
+        # Module node directory #
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH
+
+        # Module node structure #
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH/data
+
+        # Module node classification #
+        echo "$SRM_IO_OUTPUT" > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/classification
+
+        # Module node simplified commands #
+        echo "$SRM_CMD_HASH" > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/command
+
+        # Module node normalized commands history #
+        echo "$(basename $HOME)@$HOSTNAME,$HOSTTYPE,$(lsb_release -si) $(lsb_release -sr),$(date) % $SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/history
+        
+
+    }
+
 # Module main function
 #
 # The following instructions are responsible of performing the tasks the module
@@ -280,7 +303,7 @@
         else
 
             # Check source data classification #
-            if [ ! -e $SRM_MNT_BASE/pose/$SRM_MOD_NODE/info/$SRM_IO_INPUT ]; then
+            if [ "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_NODE/info/classification)" != "$SRM_IO_INPUT" ]; then
 
                 # Display message #
                 srm_echo "SRM Kernel : Error, invalid source classification"; SRM_EID_EXIT=1
@@ -289,6 +312,9 @@
 
                 # Temporary storage #
                 srm_tmpfs create
+
+                # Create module node #
+                srm_init
 
                 # Display module summary #
                 srm_echo "SRM Kernel : $(basename $0)"
@@ -331,6 +357,9 @@
 
                                 # Update module statistic #
                                 SRM_STA_PROC=$(( $SRM_STA_PROC + 1 ))
+
+                                # Create pose directory #
+                                mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/$(srm_tshash ${SRM_ADD_MAIN[2]})/$(basename $SRM_EXE_POSE)
 
                             fi
 
