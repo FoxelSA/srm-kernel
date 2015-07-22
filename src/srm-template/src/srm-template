@@ -181,6 +181,11 @@
     }
 
 # Timestamps selection
+#
+# This function detects if a given timestamps, provided by the considered pose,
+# is or not in the range of a mmsr address. In order to perform the check, the
+# function waits the pose timestamps and the two downer and upper timestamps of
+# the mmsr address.
 
     function srm_selected() {
 
