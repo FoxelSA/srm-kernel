@@ -35,7 +35,7 @@
 #       You are required to attribute the work as explained in the "Usage and
 #       Attribution" section of <http://foxel.ch/license>.
 
-    # Module io classification variables #
+    # Module classification variables #
     SRM_IO_INPUT="eyesis4pi-raw"
     SRM_IO_OUTPUT="template-module"
 
@@ -276,7 +276,8 @@
         echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/command
 
         # Module node normalized commands history #
-        echo "$(basename $HOME)@$HOSTNAME,$HOSTTYPE,$(lsb_release -si) $(lsb_release -sr),$(date) % $SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/history
+        echo "$(date),$USER@$HOSTNAME,$HOSTTYPE,$(lsb_release -si) $(lsb_release -sr)" >> $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/history
+        echo "$ $SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/history
         
 
     }
@@ -345,26 +346,39 @@
                     srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
                     srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
 
+                    # Compose source #
+                    SRM_EXE_POSE=$SRM_MNT_BASE/pose
+                    SRM_EXE_POSE=$SRM_EXE_POSE/$SRM_MOD_NODE/data
+                    SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[0]}/master
+                    SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[1]}/segment
+                    SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[2]}/pose
+                    SRM_EXE_POSE=$SRM_EXE_POSE/$(srm_tshash ${SRM_ADD_MAIN[2]})
+
                     # Parse mmrs address poses #
-                    for SRM_EXE_POSE in $SRM_MNT_BASE/pose/$SRM_MOD_NODE/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/$(srm_tshash ${SRM_ADD_MAIN[2]})/*; do
+                    for SRM_EXE_SRC in $SRM_EXE_POSE/*; do
 
                         # Parse only directories #
-                        if [ -d $SRM_EXE_POSE ]; then
+                        if [ -d $SRM_EXE_SRC ]; then
 
                             # Update module statistic #
                             SRM_STA_POSE=$(( $SRM_STA_POSE + 1 ))
 
                             # Selection on mmsr address #
-                            if (( $(srm_selected $(basename $SRM_EXE_POSE) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
+                            if (( $(srm_selected $(basename $SRM_EXE_SRC) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
 
                                 # Update module statistic #
                                 SRM_STA_PROC=$(( $SRM_STA_PROC + 1 ))
 
-                                # Create pose destination #
-                                SRM_EXE_DEST=$SRM_MNT_BASE/pose/$SRM_MOD_HASH/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/$(srm_tshash ${SRM_ADD_MAIN[2]})/$(basename $SRM_EXE_POSE)
+                                # Compose destination #
+                                SRC_EXE_DST=$SRM_MNT_BASE/pose
+                                SRC_EXE_DST=$SRC_EXE_DST/$SRM_MOD_HASH/data
+                                SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[0]}/master
+                                SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[1]}/segment  
+                                SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[2]}/pose
+                                SRC_EXE_DST=$SRC_EXE_DST/$(srm_tshash ${SRM_ADD_MAIN[2]})/$(basename $SRM_EXE_SRC)
 
                                 # Create pose directory #
-                                mkdir -p $SRM_EXE_DEST
+                                mkdir -p $SRC_EXE_DST
 
                             fi
 
@@ -384,7 +398,7 @@
 
         fi
 
-    elif [ "$SRM_MOD_EXEC" == "list-nodes" ]; then
+    elif [ "$SRM_MOD_EXEC" == "nodes" ]; then
 
         # Display available input nodes #
         for SRM_NOD_INPUT in $SRM_MNT_BASE/pose/*; do
@@ -399,12 +413,12 @@
 
         done
 
-    elif [ "$SRM_MOD_EXEC" == "input-classification" ]; then
+    elif [ "$SRM_MOD_EXEC" == "classification" ]; then
 
         # Display module classification #
         srm_echo "$SRM_IO_INPUT"
 
-    elif [ "$SRM_MOD_EXEC" == "output-classification" ]; then
+    elif [ "$SRM_MOD_EXEC" == "classification" ]; then
 
         # Display module classification #
         srm_echo "$SRM_IO_OUTPUT"
