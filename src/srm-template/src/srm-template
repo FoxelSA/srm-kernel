@@ -51,6 +51,10 @@
     SRM_MOD_MMSR=""
     SRM_MOD_NODE=""
 
+    # Module statistic variables #
+    SRM_STA_POSE=0
+    SRM_STA_PROC=0
+
     # Temporary storage variables #
     SRM_TMP_NAME=""
 
@@ -299,6 +303,10 @@
                     # Display mmsr address #
                     srm_echo "SRM Kernel : address $SRM_EXE_MSSR"
 
+                    # Reset module statistic #
+                    SRM_STA_POSE=0
+                    SRM_STA_PROC=0
+
                     # Decompose mmsr address #
                     SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
                     SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
@@ -307,7 +315,7 @@
                     srm_echo "    mac : ${SRM_ADD_MAIN[0]}"
                     srm_echo "    mas : ${SRM_ADD_MAIN[1]}"
                     srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
-                    srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"; srm_echo ""
+                    srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
 
                     # Parse mmrs address poses #
                     for SRM_EXE_POSE in $SRM_MNT_BASE/pose/$SRM_MOD_NODE/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/$(srm_tshash ${SRM_ADD_MAIN[2]})/*; do
@@ -315,22 +323,23 @@
                         # Parse only directories #
                         if [ -d $SRM_EXE_POSE ]; then
 
+                            # Update module statistic #
+                            SRM_STA_POSE=$(( $SRM_STA_POSE + 1 ))
+
                             # Selection on mmsr address #
                             if (( $(srm_selected $(basename $SRM_EXE_POSE) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
 
-                                # Display pose #
-                                srm_echo "    pos $(basename $SRM_EXE_POSE) - Selected"
-
-                            else
-
-                                # Display pose #
-                                srm_echo "    pos $(basename $SRM_EXE_POSE) - Not selected"
+                                # Update module statistic #
+                                SRM_STA_PROC=$(( $SRM_STA_PROC + 1 ))
 
                             fi
 
                         fi
 
                     done
+
+                    # Display module statistic #
+                    srm_echo "    res : $SRM_STA_PROC/$SRM_STA_POSE"
 
                 done
 
