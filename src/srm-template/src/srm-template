@@ -267,6 +267,9 @@
         # Node classification #
         echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/classification
 
+        # Node filiation #
+        echo $SRM_MOD_NODE > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/filiation
+
         # Node simplified commands #
         echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/command
 
