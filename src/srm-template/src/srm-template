@@ -393,8 +393,13 @@
 
                 done
 
-                # Kernel script call #
-                parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
+                # Check parallel directive #
+                if [ -n "$SRM_PLL_POSE" ]; then
+
+                    # Kernel script call #
+                    parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
+
+                fi
 
             fi
 
