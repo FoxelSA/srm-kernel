@@ -162,6 +162,7 @@
         srm_tmpfs create
 
         # ... #
+        cp $SRM_IO_SRC/cool-file.dat $SRM_IO_DST/cool-file.dat
 
         # Temporary storage #
         srm_tmpfs delete

@@ -366,13 +366,8 @@
 
                 done
 
-                # Temporary testing loop #
-                for IO in $SRM_PLL_POSE; do
-
-                    # Kernel script call #
-                    $(basename $0)-kernel $@ --io $IO
-
-                done
+                # Kernel script call #
+                parallel $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
 
             fi
 
