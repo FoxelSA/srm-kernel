@@ -1,10 +1,17 @@
 
 #
+#   make - configuration
+#
+
+    SRM_NAME=srm-template
+
+#
 #   make - synchronize
 #
 
     all:directories
-	cp src/srm-template bin/srm-template
+	cp src/$(SRM_NAME) bin/$(SRM_NAME)
+	cp src/$(SRM_NAME)-kernel bin/$(SRM_NAME)-kernel
 
 #
 #   make - directories

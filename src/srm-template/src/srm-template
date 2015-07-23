@@ -55,6 +55,9 @@
     SRM_STA_POSE=0
     SRM_STA_PROC=0
 
+    # Module parallel variables #
+    SRM_PLL_POSE=""
+
     # Temporary storage variables #
     SRM_TMP_NAME=""
 
@@ -89,7 +92,6 @@
                 --display)
                     SRM_MOD_EXEC="$srm_prm"
                 ;;
-
                 -n)
                     SRM_MOD_NODE="$srm_prm"
                 ;;
@@ -380,6 +382,9 @@
                                 # Create pose directory #
                                 mkdir -p $SRC_EXE_DST
 
+                                # Update parallel directive #
+                                SRM_PLL_POSE="$SRM_PLL_POSE $SRM_EXE_SRC,$SRC_EXE_DST"
+
                             fi
 
                         fi
@@ -390,6 +395,9 @@
                     srm_echo "    res : $SRM_STA_PROC/$SRM_STA_POSE"
 
                 done
+
+                # Parallel processing #
+                $(basename $0)-kernel $@ --io TMP
 
                 # Temporary storage #
                 srm_tmpfs delete

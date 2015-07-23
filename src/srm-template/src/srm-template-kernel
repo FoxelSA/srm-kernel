@@ -1,0 +1,101 @@
+#!/bin/bash
+# srm-kernel - Standard refinement modules
+#
+# Copyright (c) 2013-2015 FOXEL SA - http://foxel.ch
+# Please read <http://foxel.ch/license> for more information.
+#
+#
+# Author(s):
+#
+#       Nils Hamel <n.hamel@foxel.ch>
+#
+#
+# This file is part of the FOXEL project <http://foxel.ch>.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# Additional Terms:
+#
+#       You are required to preserve legal notices and author attributions in
+#       that material or in the Appropriate Legal Notices displayed by works
+#       containing it.
+#
+#       You are required to attribute the work as explained in the "Usage and
+#       Attribution" section of <http://foxel.ch/license>.
+
+    # Module processing variables #
+    SRM_EXE_SRC=""
+    SRM_EXE_DST=""
+
+    # Storage structure variables #
+    SRM_MNT_BASE="/data/" 
+
+# Argument and parameter
+#
+# This function reads the module script arguments and parameters using the
+# assuption that every argument always comes with a unique parameter.
+
+    function srm_arg() {
+
+        # Parses the arguments and parameters #
+        while [[ $# > 0 ]]; do
+
+            # Push token and update head #
+            srm_arg="$1"; shift
+            srm_prm="$1"; shift
+
+            # Switch on arguments #
+            case $srm_arg in
+
+                --mount-point)
+                    SRM_MNT_BASE="$srm_prm"
+                ;;
+                --source)
+                    SRM_EXE_SRC="$srm_prm"
+                ;;
+                --dest)
+                    SRM_EXE_DST="$srm_prm"
+                ;;
+
+            esac
+
+        done
+
+    }
+
+# Message display
+#
+# The following function simply displays the string provdided as parameter using
+# the standard error output.
+
+    function srm_echo() {
+
+        # Display message #
+        >&2 echo "$1"
+        
+    }
+
+# Module kernel function
+#
+# The following instruction are part of the kernel of the module that is send to
+# the available thread engaged in the network topology. They are responsible of
+# executing the task the module has to perform.
+
+    # Argument and parameter #
+    srm_arg $@
+
+    # Temporary #
+    srm_echo "$SRM_EXE_SRC/$SRM_EXE_DST"
+
