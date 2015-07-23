@@ -350,10 +350,10 @@
                     SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[0]}/master
                     SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[1]}/segment
                     SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[2]}/pose
-                    SRM_EXE_POSE=$SRM_EXE_POSE/$(srm_tshash ${SRM_ADD_MAIN[2]})
 
                     # Parse mmrs address poses #
-                    for SRM_EXE_SRC in $SRM_EXE_POSE/*; do
+                    for SRM_EXE_HAS in $SRM_EXE_POSE/*; do
+                    for SRM_EXE_SRC in $SRM_EXE_HAS/* ; do
 
                         # Check for directorie  #
                         if [ -d $SRM_EXE_SRC ]; then
@@ -385,6 +385,7 @@
 
                         fi
 
+                    done
                     done
 
                     # Display statistic #
