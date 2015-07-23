@@ -161,8 +161,13 @@
 
         elif [ "$1" == "delete" ]; then
 
-            # Delete temporary storage #
-            rm -rf $SRM_TMP_NAME
+            # Check temporary storage #
+            if [ -d $SRM_TMP_NAME ]; then
+
+                # Delete temporary storage #
+                rm -rf $SRM_TMP_NAME
+
+            fi
 
         fi
 
@@ -396,8 +401,13 @@
 
                 done
 
-                # Parallel processing #
-                $(basename $0)-kernel $@ --io TMP
+                # Temporary testing loop #
+                for IO in $SRM_PLL_POSE; do
+
+                    # Parallel processing #
+                    $(basename $0)-kernel $@ --io $IO
+
+                done
 
                 # Temporary storage #
                 srm_tmpfs delete

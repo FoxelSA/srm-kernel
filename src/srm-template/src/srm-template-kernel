@@ -35,9 +35,15 @@
 #       You are required to attribute the work as explained in the "Usage and
 #       Attribution" section of <http://foxel.ch/license>.
 
+    # Module io buffer variables #
+    SRM_IO_PATH=""
+
+    # Module io variables #
+    SRM_IO_SRC=""
+    SRM_IO_DST=""
+
     # Module processing variables #
-    SRM_EXE_SRC=""
-    SRM_EXE_DST=""
+    SRM_EXE_POSE=""
 
     # Storage structure variables #
     SRM_MNT_BASE="/data/" 
@@ -62,11 +68,8 @@
                 --mount-point)
                     SRM_MNT_BASE="$srm_prm"
                 ;;
-                --source)
-                    SRM_EXE_SRC="$srm_prm"
-                ;;
-                --dest)
-                    SRM_EXE_DST="$srm_prm"
+                --io)
+                    SRM_IO_PATH="$srm_prm"
                 ;;
 
             esac
@@ -96,6 +99,26 @@
     # Argument and parameter #
     srm_arg $@
 
-    # Temporary #
-    srm_echo "$SRM_EXE_SRC/$SRM_EXE_DST"
+    # Decompose IO path #
+    SRM_IO_PART=(${SRM_IO_PATH//,/ })
+    
+    # Compose source and destination pose #
+    SRM_IO_SRC=${SRM_IO_PART[0]}
+    SRM_IO_DST=${SRM_IO_PART[1]}
+
+    # Compose pose identification #
+    SRM_EXE_POSE=$(basename $SRM_IO_SRC)
+
+    # Check source and destination directory #
+    if [ ! -d $SRM_IO_SRC ] || [ ! -d $SRM_IO_DST ] ; then
+
+        # Display message #
+        srm_echo "SRM Kernel : Error, invalid module kernel io specification"
+
+    else
+
+        # Display message #
+        srm_echo "SRM Kernel : Processing pose $SRM_EXE_POSE"
+
+    fi
 
