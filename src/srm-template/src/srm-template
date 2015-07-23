@@ -57,6 +57,7 @@
 
     # Parallel variables #
     SRM_PLL_POSE=""
+    SRM_PLL_CONF="1"
 
     # Signal variables #
     SRM_SIG_EXIT=0
@@ -88,6 +89,9 @@
                 ;;
                 --display)
                     SRM_MOD_EXEC="$srm_prm"
+                ;;
+                --thread)
+                    SRM_PLL_CONF="$srm_prm"
                 ;;
                 -n)
                     SRM_MOD_NODE="$srm_prm"
@@ -151,6 +155,25 @@
 
         # Returns hashed timestmap #
         echo $(( ${SRM_TS_UNIX[0]} / 100 ))
+
+    }
+
+# Parallel configuration
+
+    function srm_parallel() {
+
+        # Check for file #
+        if [ -e $SRM_PLL_CONF ]; then
+
+            # Compose parallel command #
+            echo "--sshconfig $SRM_PLL_CONF"
+
+        else
+
+            # Compose parallel command #
+            echo "-j$SRM_PLL_CONF"
+
+        fi
 
     }
 
@@ -367,7 +390,7 @@
                 done
 
                 # Kernel script call #
-                parallel $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
+                parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
 
             fi
 
