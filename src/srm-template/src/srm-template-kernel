@@ -92,9 +92,8 @@
 
 # Module kernel function
 #
-# The following instruction are part of the kernel of the module that is send to
-# the available thread engaged in the network topology. They are responsible of
-# executing the task the module has to perform.
+# The following instructions are responsible of performing the tasks the module
+# is supposed to do.
 
     # Argument and parameter #
     srm_arg $@

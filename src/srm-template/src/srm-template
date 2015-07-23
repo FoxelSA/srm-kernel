@@ -35,34 +35,34 @@
 #       You are required to attribute the work as explained in the "Usage and
 #       Attribution" section of <http://foxel.ch/license>.
 
-    # Module classification variables #
-    SRM_IO_INPUT="eyesis4pi-raw"
-    SRM_IO_OUTPUT="template-module"
+    # Classification variables #
+    SRM_IO_ICLASS="eyesis4pi-raw"
+    SRM_IO_OCLASS="template-module"
 
     # Command variables #
     SRM_CMD_NORM="$(basename $0)"
     SRM_CMD_HASH="$(basename $0)"
 
-    # Storage structure variables #
+    # Storage variables #
     SRM_MNT_BASE="/data/"    
 
-    # Module execution variables #
+    # Execution variables #
     SRM_MOD_EXEC="default"
     SRM_MOD_MMSR=""
     SRM_MOD_NODE=""
 
-    # Module statistic variables #
+    # Statistic variables #
     SRM_STA_POSE=0
     SRM_STA_PROC=0
 
-    # Module parallel variables #
+    # Parallel variables #
     SRM_PLL_POSE=""
 
     # Temporary storage variables #
     SRM_TMP_NAME=""
 
-    # Module execution variables #
-    SRM_EID_EXIT=0
+    # Signal variables #
+    SRM_SIG_EXIT=0
 
 # Argument and parameter
 #
@@ -73,10 +73,10 @@
 
     function srm_arg() {
 
-        # Parses the arguments and parameters #
+        # Arguments and parameters #
         while [[ $# > 0 ]]; do
 
-            # Push token and update head #
+            # Read token and update head #
             srm_arg="$1"; shift
             srm_prm="$1"; shift
 
@@ -136,7 +136,7 @@
         # Compute SHA256 sum #
         SRM_SHA_S256=$(echo "$1" | sha256sum)
 
-        # Return truncated SHA256 sum #
+        # Truncate SHA256 sum #
         echo "${SRM_SHA_S256:0:16}"
 
     }
@@ -149,9 +149,9 @@
 
     function srm_tmpfs() {
 
-        # Create temporary storage name #
+        # Create temporary storage path #
         SRM_TMP_NAME=$(echo "$SRM_CMD_NORM" | sha256sum)
-        SRM_TMP_NAME=/dev/shm/${SRM_TMP_NAME:0:32}
+        SRM_TMP_NAME=/run/shm/${SRM_TMP_NAME:0:32}
 
         # Temporary storage management #
         if [ "$1" == "create" ]; then
@@ -173,7 +173,7 @@
 
     }
 
-# Timestamps simple hashing
+# Timestamps hashing
 #
 # This function returns the hashed (truncated) timestamps value for any given
 # timestamp according to the storage structure standards. It corresponds to a
@@ -181,7 +181,7 @@
 
     function srm_tshash() {
 
-        # Retrieve unix timestamp - if composed #
+        # Retrieve unix timestamps #
         SRM_TS_UNIX=(${1//_/ })
 
         # Returns hashed timestmap #
@@ -192,9 +192,9 @@
 # Timestamps selection
 #
 # This function detects if a given timestamps, provided by the considered pose,
-# is or not in the range of a mmsr address. In order to perform the check, the
-# function waits the pose timestamps and the two downer and upper timestamps of
-# the mmsr address.
+# is in the range of a mmsr address. In order to perform the check, the function
+# waits the pose timestamps and the two downer and upper timestamps of the mmsr
+# address to provide an answer.
 
     function srm_selected() {
 
@@ -261,28 +261,28 @@
 
     }
 
-# Module node creation #
+# Node initialization #
 #
-# This function initialize the module node directory and file structure and
-# creates information files. When the structure is already initialized, the
+# This function initialize the module node directories and files structure and
+# creates the information files. When the structure is already initialized, the
 # function only complete required information.
 
     function srm_init() {
 
-        # Module node directory #
+        # Node directory #
         mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH
 
-        # Module node structure #
+        # Node structure #
         mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info
         mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH/data
 
-        # Module node classification #
-        echo $SRM_IO_OUTPUT > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/classification
+        # Node classification #
+        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/classification
 
-        # Module node simplified commands #
+        # Node simplified commands #
         echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/command
 
-        # Module node normalized commands history #
+        # Node normalized commands history #
         echo "$(date),$USER@$HOSTNAME,$HOSTTYPE,$(lsb_release -si) $(lsb_release -sr)" >> $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/history
         echo "$ $SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/history
         
@@ -291,39 +291,42 @@
 
 # Module main function
 #
-# The following instructions are responsible of performing the tasks the module
-# is supposed to do. This main function is also responsible of the management of
-# errors and the exit message to the system.
+# The following instrucations constitute the module main function. The main
+# function is responsible of enumerating the poses that have to be considered
+# by the module kernel script which is responsible of the poses processing.
+#
+# The main function is also responsible of the management of errors and the 
+# exit message to the system.
 
     # Argument and parameter #
     srm_arg $@
 
-    # Module hash #
+    # Compute module hash #
     SRM_MOD_HASH=$(srm_hash "$SRM_CMD_HASH")
 
-    # Module execution switch #
+    # Switch on execution mode #
     if [ "$SRM_MOD_EXEC" == "default" ]; then
 
-        # Check source node availability #
+        # Check source node #
         if [ ! -d $SRM_MNT_BASE/pose/$SRM_MOD_NODE/ ]; then
 
             # Display message #
-            srm_echo "SRM Kernel : Error, unknown source node"; SRM_EID_EXIT=1
+            srm_echo "SRM Kernel : Error, unknown source node"; SRM_SIG_EXIT=1
 
         else
 
-            # Check source data classification #
-            if [ "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_NODE/info/classification)" != "$SRM_IO_INPUT" ]; then
+            # Check source classification #
+            if [ "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_NODE/info/classification)" != "$SRM_IO_ICLASS" ]; then
 
                 # Display message #
-                srm_echo "SRM Kernel : Error, invalid source classification"; SRM_EID_EXIT=1
+                srm_echo "SRM Kernel : Error, invalid source classification"; SRM_SIG_EXIT=1
 
             else
 
                 # Temporary storage #
                 srm_tmpfs create
 
-                # Create module node #
+                # Node initialization #
                 srm_init
 
                 # Display module summary #
@@ -339,7 +342,7 @@
                     # Display mmsr address #
                     srm_echo "SRM Kernel : address $SRM_EXE_MSSR"
 
-                    # Reset module statistic #
+                    # Reset statistic #
                     SRM_STA_POSE=0
                     SRM_STA_PROC=0
 
@@ -347,13 +350,13 @@
                     SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
                     SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
 
-                    # Display decomposed mmsr address #
+                    # Display mmsr address summary #
                     srm_echo "    mac : ${SRM_ADD_MAIN[0]}"
                     srm_echo "    mas : ${SRM_ADD_MAIN[1]}"
                     srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
                     srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
 
-                    # Compose source #
+                    # Compose source node #
                     SRM_EXE_POSE=$SRM_MNT_BASE/pose
                     SRM_EXE_POSE=$SRM_EXE_POSE/$SRM_MOD_NODE/data
                     SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[0]}/master
@@ -364,19 +367,19 @@
                     # Parse mmrs address poses #
                     for SRM_EXE_SRC in $SRM_EXE_POSE/*; do
 
-                        # Parse only directories #
+                        # Check for directorie  #
                         if [ -d $SRM_EXE_SRC ]; then
 
-                            # Update module statistic #
+                            # Update statistic #
                             SRM_STA_POSE=$(( $SRM_STA_POSE + 1 ))
 
-                            # Selection on mmsr address #
+                            # Pose mmsr range detection #
                             if (( $(srm_selected $(basename $SRM_EXE_SRC) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
 
-                                # Update module statistic #
+                                # Update statistic #
                                 SRM_STA_PROC=$(( $SRM_STA_PROC + 1 ))
 
-                                # Compose destination #
+                                # Compose destination node #
                                 SRC_EXE_DST=$SRM_MNT_BASE/pose
                                 SRC_EXE_DST=$SRC_EXE_DST/$SRM_MOD_HASH/data
                                 SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[0]}/master
@@ -396,7 +399,7 @@
 
                     done
 
-                    # Display module statistic #
+                    # Display statistic #
                     srm_echo "    res : $SRM_STA_PROC/$SRM_STA_POSE"
 
                 done
@@ -404,7 +407,7 @@
                 # Temporary testing loop #
                 for IO in $SRM_PLL_POSE; do
 
-                    # Parallel processing #
+                    # Kernel script call #
                     $(basename $0)-kernel $@ --io $IO
 
                 done
@@ -418,11 +421,11 @@
 
     elif [ "$SRM_MOD_EXEC" == "nodes" ]; then
 
-        # Display available input nodes #
+        # Display available source nodes #
         for SRM_NOD_INPUT in $SRM_MNT_BASE/pose/*; do
 
-            # Detects directories #
-            if [ -e $SRM_NOD_INPUT/info/$SRM_IO_INPUT ]; then
+            # Check for directories #
+            if [ -e $SRM_NOD_INPUT/info/$SRM_IO_ICLASS ]; then
 
                 # Display source node #
                 srm_echo "$(basename $SRM_NOD_INPUT)"
@@ -431,23 +434,23 @@
 
         done
 
-    elif [ "$SRM_MOD_EXEC" == "classification" ]; then
+    elif [ "$SRM_MOD_EXEC" == "iclass" ]; then
 
-        # Display module classification #
-        srm_echo "$SRM_IO_INPUT"
+        # Display classification #
+        srm_echo "$SRM_IO_ICLASS"
 
-    elif [ "$SRM_MOD_EXEC" == "classification" ]; then
+    elif [ "$SRM_MOD_EXEC" == "oclass" ]; then
 
-        # Display module classification #
-        srm_echo "$SRM_IO_OUTPUT"
+        # Display classification #
+        srm_echo "$SRM_IO_OCLASS"
 
     else
 
         # Display message #
-        srm_echo "SRM - Kernel : Error, invalid module mode"; SRM_EID_EXIT=1
+        srm_echo "SRM - Kernel : Error, invalid module mode"; SRM_SIG_EXIT=1
 
     fi
 
     # Exit code #
-    exit $SRM_EID_EXIT
+    exit $SRM_SIG_EXIT
 
