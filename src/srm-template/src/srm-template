@@ -116,7 +116,9 @@
 
 # Argument and parameter sorting
 #
-#
+# This function is used to compose the simplified command that is used to create
+# the module hash sum. Only argument starting with '-' swicth are considered for
+# hash computation and they order has not to modify the hash sum.
 
     function srm_insert() {
 
