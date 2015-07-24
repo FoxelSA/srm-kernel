@@ -1,0 +1,172 @@
+#!/bin/bash
+# srm-kernel - Standard refinement modules
+#
+# Copyright (c) 2013-2015 FOXEL SA - http://foxel.ch
+# Please read <http://foxel.ch/license> for more information.
+#
+#
+# Author(s):
+#
+#       Nils Hamel <n.hamel@foxel.ch>
+#
+#
+# This file is part of the FOXEL project <http://foxel.ch>.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# Additional Terms:
+#
+#       You are required to preserve legal notices and author attributions in
+#       that material or in the Appropriate Legal Notices displayed by works
+#       containing it.
+#
+#       You are required to attribute the work as explained in the "Usage and
+#       Attribution" section of <http://foxel.ch/license>.
+
+    # Storage variables #
+    SRM_MNT_BASE="/data/" 
+
+    # Communication variables #
+    SRM_IO_PATH=""
+
+    # Current pose variables #
+    SRM_EXE_POSE=""
+
+    # Processing variables #
+    SRM_IO_MAC=""
+    SRM_IO_SRC=""
+    SRM_IO_DST=""
+
+    # Temporary storage variables #
+    SRM_TMP_NAME=""
+
+# Argument and parameter
+#
+# This function reads the module script arguments and parameters using the
+# assuption that every argument always comes with a unique parameter.
+
+    function srm_arg() {
+
+        # Arguments and parameters #
+        while [[ $# > 0 ]]; do
+
+            # Read token and update head #
+            srm_arg="$1"; shift
+            srm_prm="$1"; shift
+
+            # Switch on arguments #
+            case $srm_arg in
+
+                --mount-point)
+                    SRM_MNT_BASE="$srm_prm"
+                ;;
+                --io)
+                    SRM_IO_PATH="$srm_prm"
+                ;;
+
+            esac
+
+        done
+
+    }
+
+# Message display
+#
+# The following function simply displays the string provdided as parameter using
+# the standard error output.
+
+    function srm_echo() {
+
+        # Display message #
+        >&2 echo "$1"
+        
+    }
+
+# Temporary file system
+#
+# This function creates a temporary storage (tmpfs) in case module requires
+# fast-access storage. It also allows to delete the temporary storage as the
+# module ends its task.
+
+    function srm_tmpfs() {
+
+        # Create temporary storage path #
+        SRM_TMP_NAME=$(echo "$SRM_IO_PATH" | sha256sum)
+        SRM_TMP_NAME=/run/shm/${SRM_TMP_NAME:0:32}
+
+        # Temporary storage management #
+        if [ "$1" == "create" ]; then
+
+            # Create temporary storage #
+            mkdir -p $SRM_TMP_NAME
+
+        elif [ "$1" == "delete" ]; then
+
+            # Check temporary storage #
+            if [ -d $SRM_TMP_NAME ]; then
+
+                # Delete temporary storage #
+                rm -rf $SRM_TMP_NAME
+
+            fi
+
+        fi
+
+    }
+
+# Module kernel function
+#
+# The following instructions are responsible of performing the tasks the module
+# is supposed to do and constitute the main kernel function. The kernel function
+# is broadcasted to the different processing computer according to the available
+# network topology.
+
+    # Arguments and parameters #
+    srm_arg $@
+
+    # Decompose IO buffer #
+    SRM_IO_PART=(${SRM_IO_PATH//,/ })
+    
+    # Compose source and destination #
+    SRM_IO_MAC=${SRM_IO_PART[0]}
+    SRM_IO_SRC=${SRM_IO_PART[1]}
+    SRM_IO_DST=${SRM_IO_PART[2]}
+
+    # Compose pose identification #
+    SRM_EXE_POSE=$(basename $SRM_IO_SRC)
+
+    # Check source and destination directory #
+    if [ ! -f $SRM_IO_SRC ] || [ ! -d $SRM_IO_DST ] ; then
+
+        # Display message #
+        srm_echo "SRM Kernel : Error, invalid module kernel io specification"
+
+    else
+
+        # Display message #
+        srm_echo "SRM Kernel : Processing pose $SRM_EXE_POSE of camera $SRM_IO_MAC"
+
+        # Temporary storage #
+        srm_tmpfs create
+
+        # ... #
+        echo "---SRC : $SRM_IO_SRC"
+        echo "---DST : $SRM_IO_DST"
+
+        # Temporary storage #
+        srm_tmpfs delete
+
+    fi
+
