@@ -66,8 +66,17 @@
 #
 # This function reads the module script arguments and parameters using the
 # assuption that every argument always comes with a unique parameter. Moreover
-# this function creates and normalized and simplified representation of the
+# this function creates a normalized and a simplified representation of the
 # script command.
+#
+# The simplified representation of the command considers only parameters that
+# are specified using a simple '-' switch (e.g. '-a 1.0'). This simplified
+# command is then used to compute the module hash sum according to the standard
+# storage structure requirement.
+#
+# A consequence of the standard storage structure and the way module hash are
+# computed is that arguments considered in the simplified representation of the
+# command cannot consider default values.
 
     function srm_arg() {
 
@@ -116,9 +125,9 @@
 
 # Argument and parameter sorting
 #
-# This function is used to compose the simplified command that is used to create
-# the module hash sum. Only argument starting with '-' swicth are considered for
-# hash computation and they order has not to modify the hash sum.
+# This function is used to set the simplified command that is used to compute
+# the module hash sum. In addition, the order of the arguments and parameters
+# are provided must not change the hash sum.
 
     function srm_insert() {
 
@@ -130,10 +139,10 @@
         SRM_CMD_HASH="${SRM_INS_PART[0]}"
         SRM_INS_FLAG=0
 
-        # Sorted insertion #
+        # Reordered insertion #
         for (( i = 1; i < ${SRM_INS_SIZE}; i = i + 2 )); do
 
-            # Insertion check #
+            # Sort check #
             if (( $( printf "%d" "'${SRM_INS_PART[$i]:1:1}" ) > $( printf "%d" "'${1:1:1}" ) )) && (( $SRM_INS_FLAG == 0 )); then
 
                 # Insert argument and parameter #
@@ -170,9 +179,9 @@
 
 # Module hash
 #
-# This function computes the hash used to identify the module processing results
-# in the storage structure. An SHA256 sum is considered as hash algorithm and
-# only the 16 first hexadecimal digits of the hash are kept.
+# This function computes the hash sum used to identify the module processing
+# results in the storage structure. An SHA256 sum is considered as hash
+# algorithm and only the 16 first hexadecimal digits of the hash are kept.
 
     function srm_hash() {
 
@@ -227,9 +236,9 @@
 # Timestamps selection
 #
 # This function detects if a given timestamps, provided by the considered pose,
-# is in the range of a mmsr address. In order to perform the check, the function
-# waits the pose timestamps and the two downer and upper timestamps of the mmsr
-# address to provide an answer.
+# is in the range of the provided mmsr address. In order to perform this check,
+# the function waits the pose timestamps and the two downer and upper timestamps
+# of the considered mmsr address to provide an answer.
 
     function srm_selected() {
 
@@ -331,10 +340,11 @@
 #
 # The following instrucations constitute the module main function. The main
 # function is responsible of enumerating the poses that have to be considered
-# by the module kernel script which is responsible of the poses processing.
+# by the module kernel script which is responsible of the actual mmsr addresses
+# poses processing.
 #
 # The main function is also responsible of the management of errors and the 
-# exit message to the system.
+# signal send to the system.
 
     # Arguments and parameters #
     srm_arg $@
