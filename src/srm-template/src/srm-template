@@ -159,6 +159,11 @@
     }
 
 # Parallel configuration
+#
+# This function establish the configuration of module parallel processing. If
+# a network topology configuration file is provided, it is considered by GNU
+# parallel. Otherwise, the parameter is interpreted as the number of thread to
+# use on the local machine.
 
     function srm_parallel() {
 
@@ -373,7 +378,7 @@
                                 SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[0]}/master
                                 SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[1]}/segment  
                                 SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[2]}/pose
-                                SRC_EXE_DST=$SRC_EXE_DST/$(srm_tshash ${SRM_ADD_MAIN[2]})/$(basename $SRM_EXE_SRC)
+                                SRC_EXE_DST=$SRC_EXE_DST/$(srm_tshash $(basename $SRM_EXE_SRC))/$(basename $SRM_EXE_SRC)
 
                                 # Create pose directory #
                                 mkdir -p $SRC_EXE_DST
