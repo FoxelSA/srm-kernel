@@ -106,11 +106,51 @@
             if [ "${srm_arg:1:1}" != "-" ]; then 
 
                 # Compose simplified command #
-                SRM_CMD_HASH="$SRM_CMD_HASH $srm_arg $srm_prm"; 
+                srm_insert $srm_arg $srm_prm
 
             fi
 
         done
+
+    }
+
+# Argument and parameter sorting
+#
+#
+
+    function srm_insert() {
+
+        # Create token array #
+        SRM_INS_PART=($SRM_CMD_HASH)
+        SRM_INS_SIZE=${#SRM_INS_PART[@]}
+
+        # Initialize insertion #
+        SRM_CMD_HASH="${SRM_INS_PART[0]}"
+        SRM_INS_FLAG=0
+
+        # Sorted insertion #
+        for (( i = 1; i < ${SRM_INS_SIZE}; i = i + 2 )); do
+
+            # Insertion check #
+            if (( $( printf "%d" "'${SRM_INS_PART[$i]:1:1}" ) > $( printf "%d" "'${1:1:1}" ) )) && (( $SRM_INS_FLAG == 0 )); then
+
+                # Insert argument and parameter #
+                SRM_CMD_HASH="$SRM_CMD_HASH $1 $2 ${SRM_INS_PART[$i]} ${SRM_INS_PART[$((i+1))]}";
+
+                # Update insertion flag #
+                SRM_INS_FLAG=1
+
+            else
+
+                # Insert argument and parameter #
+                SRM_CMD_HASH="$SRM_CMD_HASH ${SRM_INS_PART[$i]} ${SRM_INS_PART[$((i+1))]}"
+
+            fi
+
+        done
+
+        # Check insertion flag #
+        if (( $SRM_INS_FLAG == 0 )); then SRM_CMD_HASH="$SRM_CMD_HASH $1 $2"; fi
 
     }
 
