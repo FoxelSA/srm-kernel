@@ -346,10 +346,10 @@
     if [ "$SRM_MOD_EXEC" == "default" ]; then
 
         # Check source node #
-        if [ ! -d $SRM_MNT_BASE/pose/$SRM_MOD_NODE/ ]; then
+        if [ ! -d $SRM_MNT_BASE/pose/$SRM_MOD_NODE/ ] || (( ${#SRM_MOD_NODE} != 16 )); then
 
             # Display message #
-            srm_echo "SRM Kernel : Error, unknown source node"; SRM_SIG_EXIT=1
+            srm_echo "SRM Kernel : Error, unknown or invalid source node"; SRM_SIG_EXIT=1
 
         else
 
