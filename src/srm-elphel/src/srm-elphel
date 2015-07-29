@@ -58,6 +58,8 @@
     # Parallel variables #
     SRM_PLL_POSE=""
     SRM_PLL_CONF="1"
+    SRM_PLL_SIZE=64
+    SRM_PLL_INDX=0
 
     # Signal variables #
     SRM_SIG_EXIT=0
@@ -101,6 +103,9 @@
                 ;;
                 --thread)
                     SRM_PLL_CONF="$srm_prm"
+                ;;
+                --block-size)
+                    SRM_PLL_SIZE=$srm_prm
                 ;;
                 -n)
                     SRM_MOD_NODE="$srm_prm"
@@ -424,6 +429,28 @@
                     # Update parallel directive #
                     SRM_PLL_POSE="$SRM_PLL_POSE ${SRM_ADD_MAIN[0]},$SRM_EXE_PATH/$SRM_EXE_NAME,$SRC_EXE_DST"
 
+                    # Update parallel index #
+                    SRM_PLL_INDX=$(( SRM_PLL_INDX + 1 ))
+
+                    # Check parallel size #
+                    if (( SRM_PLL_INDX >= SRM_PLL_SIZE )); then
+
+                        # Check parallel directive #
+                        if [ -n "$SRM_PLL_POSE" ]; then
+
+                            # Kernel script call #
+                            parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
+
+                        fi
+
+                        # Reset parallel directive #
+                        SRM_PLL_POSE=""
+
+                        # Reset parallel index #
+                        SRM_PLL_INDX=0
+
+                    fi
+
                 fi
 
             done
@@ -433,14 +460,6 @@
             srm_echo "    res : $SRM_STA_PROC/$SRM_STA_POSE"
 
         done
-
-        # Check parallel directive #
-        if [ -n "$SRM_PLL_POSE" ]; then
-
-            # Kernel script call #
-            parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
-
-        fi
 
     elif [ "$SRM_MOD_EXEC" == "nodes" ]; then
 

@@ -58,6 +58,8 @@
     # Parallel variables #
     SRM_PLL_POSE=""
     SRM_PLL_CONF="1"
+    SRM_PLL_SIZE=64
+    SRM_PLL_INDX=0
 
     # Signal variables #
     SRM_SIG_EXIT=0
@@ -434,6 +436,28 @@
 
                                 # Update parallel directive #
                                 SRM_PLL_POSE="$SRM_PLL_POSE ${SRM_ADD_MAIN[0]},$SRM_EXE_SRC,$SRC_EXE_DST"
+
+                                # Update parallel index #
+                                SRM_PLL_INDX=$(( SRM_PLL_INDX + 1 ))
+
+                                # Check parallel size #
+                                if (( SRM_PLL_INDX >= SRM_PLL_SIZE )); then
+
+                                    # Check parallel directive #
+                                    if [ -n "$SRM_PLL_POSE" ]; then
+
+                                        # Kernel script call #
+                                        parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
+
+                                    fi
+
+                                    # Reset parallel directive #
+                                    SRM_PLL_POSE=""
+
+                                    # Reset parallel index #
+                                    SRM_PLL_INDX=0
+
+                                fi
 
                             fi
 
