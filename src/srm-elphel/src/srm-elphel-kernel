@@ -148,7 +148,7 @@
     SRM_EXE_POSE=$(basename $SRM_IO_SRC)
 
     # Check source and destination directory #
-    if [ ! -f $SRM_IO_SRC ] || [ ! -d $SRM_IO_DST ] ; then
+    if [ ! -f $SRM_IO_SRC ]; then
 
         # Display message #
         srm_echo "SRM Kernel : Error, invalid module kernel io specification"
@@ -157,6 +157,9 @@
 
         # Display message #
         srm_echo "SRM Kernel : Processing pose $SRM_EXE_POSE of camera $SRM_IO_MAC"
+
+        # Create pose directory #
+        mkdir -p $SRM_IO_DST
 
         # Create absolute soft link to rawdata #
         ln -s $SRM_IO_SRC $SRM_IO_DST

@@ -432,9 +432,6 @@
                                 SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[2]}/pose
                                 SRC_EXE_DST=$SRC_EXE_DST/$(srm_tshash $(basename $SRM_EXE_SRC))/$(basename $SRM_EXE_SRC)
 
-                                # Create pose directory #
-                                mkdir -p $SRC_EXE_DST
-
                                 # Update parallel directive #
                                 SRM_PLL_POSE="$SRM_PLL_POSE ${SRM_ADD_MAIN[0]},$SRM_EXE_SRC,$SRC_EXE_DST"
 

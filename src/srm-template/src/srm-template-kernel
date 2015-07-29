@@ -148,7 +148,7 @@
     SRM_EXE_POSE=$(basename $SRM_IO_SRC)
 
     # Check source and destination directory #
-    if [ ! -d $SRM_IO_SRC ] || [ ! -d $SRM_IO_DST ] ; then
+    if [ ! -d $SRM_IO_SRC ]; then
 
         # Display message #
         srm_echo "SRM Kernel : Error, invalid module kernel io specification"
@@ -160,6 +160,9 @@
 
         # Temporary storage #
         srm_tmpfs create
+
+        # Create destination pose directory #
+        mkdir -p $SRM_IO_DST
 
         # ... #
         cp $SRM_IO_SRC/cool-file.dat $SRM_IO_DST/cool-file.dat
