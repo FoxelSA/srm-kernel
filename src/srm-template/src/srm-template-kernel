@@ -35,9 +35,6 @@
 #       You are required to attribute the work as explained in the "Usage and
 #       Attribution" section of <http://foxel.ch/license>.
 
-    # Storage variables #
-    SRM_MNT_BASE="/data/" 
-
     # Communication variables #
     SRM_IO_PATH=""
 
@@ -69,9 +66,6 @@
             # Switch on arguments #
             case $srm_arg in
 
-                --mount-point)
-                    SRM_MNT_BASE="$srm_prm"
-                ;;
                 --io)
                     SRM_IO_PATH="$srm_prm"
                 ;;
@@ -92,6 +86,22 @@
         # Display message #
         >&2 echo "$1"
         
+    }
+
+# Timestamps hashing
+#
+# This function returns the hashed (truncated) timestamps value for any given
+# timestamp according to the storage structure standards. It corresponds to a
+# simple division by ten.
+
+    function srm_tshash() {
+
+        # Retrieve unix timestamps #
+        SRM_TS_UNIX=(${1//_/ })
+
+        # Returns hashed timestmap #
+        echo $(( ${SRM_TS_UNIX[0]} / 100 ))
+
     }
 
 # Temporary file system
@@ -138,14 +148,10 @@
 
     # Decompose IO buffer #
     SRM_IO_PART=(${SRM_IO_PATH//,/ })
-    
-    # Compose source and destination #
-    SRM_IO_MAC=${SRM_IO_PART[0]}
-    SRM_IO_SRC=${SRM_IO_PART[1]}
-    SRM_IO_DST=${SRM_IO_PART[2]}
 
-    # Compose pose identification #
-    SRM_EXE_POSE=$(basename $SRM_IO_SRC)
+    # Compose source and destination #
+    SRM_IO_SRC=${SRM_IO_PART[0]}/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[3]}/master/${SRM_IO_PART[4]}/segment/${SRM_IO_PART[5]}/pose/$(srm_tshash ${SRM_IO_PART[6]})/${SRM_IO_PART[6]}
+    SRM_IO_DST=${SRM_IO_PART[0]}/pose/${SRM_IO_PART[2]}/data/${SRM_IO_PART[3]}/master/${SRM_IO_PART[4]}/segment/${SRM_IO_PART[5]}/pose/$(srm_tshash ${SRM_IO_PART[6]})/${SRM_IO_PART[6]}
 
     # Check source and destination directory #
     if [ ! -d $SRM_IO_SRC ]; then
@@ -156,7 +162,7 @@
     else
 
         # Display message #
-        srm_echo "    pose $SRM_EXE_POSE of camera $SRM_IO_MAC"
+        srm_echo "    pose ${SRM_IO_PART[6]} of camera ${SRM_IO_PART[3]}"
 
         # Temporary storage #
         srm_tmpfs create

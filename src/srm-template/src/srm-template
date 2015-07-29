@@ -58,8 +58,6 @@
     # Parallel variables #
     SRM_PLL_POSE=""
     SRM_PLL_CONF="1"
-    SRM_PLL_SIZE=64
-    SRM_PLL_INDX=0
 
     # Signal variables #
     SRM_SIG_EXIT=0
@@ -103,9 +101,6 @@
                 ;;
                 --thread)
                     SRM_PLL_CONF="$srm_prm"
-                ;;
-                --block-size)
-                    SRM_PLL_SIZE=$srm_prm
                 ;;
                 -n)
                     SRM_MOD_NODE="$srm_prm"
@@ -195,22 +190,6 @@
 
         # Truncate SHA256 sum #
         echo "${SRM_SHA_S256:0:16}"
-
-    }
-
-# Timestamps hashing
-#
-# This function returns the hashed (truncated) timestamps value for any given
-# timestamp according to the storage structure standards. It corresponds to a
-# simple division by ten.
-
-    function srm_tshash() {
-
-        # Retrieve unix timestamps #
-        SRM_TS_UNIX=(${1//_/ })
-
-        # Returns hashed timestmap #
-        echo $(( ${SRM_TS_UNIX[0]} / 100 ))
 
     }
 
@@ -392,10 +371,6 @@
                     # Display mmsr address #
                     srm_echo "SRM Kernel : address $SRM_EXE_MSSR"
 
-                    # Reset statistic #
-                    SRM_STA_POSE=0
-                    SRM_STA_PROC=0
-
                     # Decompose mmsr address #
                     SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
                     SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
@@ -406,64 +381,21 @@
                     srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
                     srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
 
-                    # Compose source node #
-                    SRM_EXE_POSE=$SRM_MNT_BASE/pose
-                    SRM_EXE_POSE=$SRM_EXE_POSE/$SRM_MOD_NODE/data
-                    SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[0]}/master
-                    SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[1]}/segment
-                    SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[2]}/pose
-
                     # Display module porcessing #
                     srm_echo "SRM Kernel : processing"
 
                     # Parse mmrs address poses #
-                    for SRM_EXE_HAS in $SRM_EXE_POSE/*; do
+                    for SRM_EXE_HAS in $SRM_MNT_BASE/pose/$SRM_MOD_NODE/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/*; do
                     for SRM_EXE_SRC in $SRM_EXE_HAS/* ; do
 
                         # Check for directorie  #
                         if [ -d $SRM_EXE_SRC ]; then
 
-                            # Update statistic #
-                            SRM_STA_POSE=$(( $SRM_STA_POSE + 1 ))
-
                             # Pose mmsr range detection #
                             if (( $(srm_selected $(basename $SRM_EXE_SRC) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
 
-                                # Update statistic #
-                                SRM_STA_PROC=$(( $SRM_STA_PROC + 1 ))
-
-                                # Compose destination node #
-                                SRC_EXE_DST=$SRM_MNT_BASE/pose
-                                SRC_EXE_DST=$SRC_EXE_DST/$SRM_MOD_HASH/data
-                                SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[0]}/master
-                                SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[1]}/segment  
-                                SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[2]}/pose
-                                SRC_EXE_DST=$SRC_EXE_DST/$(srm_tshash $(basename $SRM_EXE_SRC))/$(basename $SRM_EXE_SRC)
-
                                 # Update parallel directive #
-                                SRM_PLL_POSE="$SRM_PLL_POSE ${SRM_ADD_MAIN[0]},$SRM_EXE_SRC,$SRC_EXE_DST"
-
-                                # Update parallel index #
-                                SRM_PLL_INDX=$(( SRM_PLL_INDX + 1 ))
-
-                                # Check parallel size #
-                                if (( SRM_PLL_INDX >= SRM_PLL_SIZE )); then
-
-                                    # Check parallel directive #
-                                    if [ -n "$SRM_PLL_POSE" ]; then
-
-                                        # Kernel script call #
-                                        parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
-
-                                    fi
-
-                                    # Reset parallel directive #
-                                    SRM_PLL_POSE=""
-
-                                    # Reset parallel index #
-                                    SRM_PLL_INDX=0
-
-                                fi
+                                SRM_PLL_POSE="$SRM_PLL_POSE $SRM_MNT_BASE,$SRM_MOD_NODE,$SRM_MOD_HASH,${SRM_ADD_MAIN[0]},${SRM_ADD_MAIN[1]},${SRM_ADD_MAIN[2]},$(basename $SRM_EXE_SRC)"
 
                             fi
 
@@ -471,12 +403,6 @@
 
                     done
                     done
-
-                    # Display statistic #
-                    srm_echo "SRM Kernel : statistics"
-
-                    # Display selected poses #
-                    srm_echo "    res : $SRM_STA_PROC/$SRM_STA_POSE"
 
                 done
 
