@@ -38,10 +38,6 @@
     # Storage variables #
     SRM_MNT_BASE="/data/"
 
-    # Classification variables #
-    SRM_IO_ICLASS="rawdata"
-    SRM_IO_OCLASS="eyesis4pi-raw"
-
     # Command variables #
     SRM_CMD_NORM="$(basename $0)"
     SRM_CMD_HASH="$(basename $0)"
@@ -49,7 +45,8 @@
     # Execution variables #
     SRM_MOD_EXEC="default"
     SRM_MOD_MMSR=""
-    SRM_MOD_NODE="elphel-raw"
+    SRM_MOD_IHAS="special-elphel-raw"
+    SRM_MOD_OHAS=""
 
     # Statistic variables #
     SRM_STA_POSE=0
@@ -58,11 +55,13 @@
     # Parallel variables #
     SRM_PLL_POSE=""
     SRM_PLL_CONF="1"
-    SRM_PLL_SIZE=64
-    SRM_PLL_INDX=0
 
     # Signal variables #
     SRM_SIG_EXIT=0
+
+    # Classification variables #
+    SRM_IO_ICLASS="elphel-raw"
+    SRM_IO_OCLASS="elphel-raw"
 
 # Argument and parameter
 #
@@ -103,12 +102,6 @@
                 ;;
                 --thread)
                     SRM_PLL_CONF="$srm_prm"
-                ;;
-                --block-size)
-                    SRM_PLL_SIZE=$srm_prm
-                ;;
-                -n)
-                    SRM_MOD_NODE="$srm_prm"
                 ;;
 
             esac
@@ -180,38 +173,6 @@
         # Display message #
         >&2 echo "$1"
         
-    }
-
-# Module hash
-#
-# This function computes the hash sum used to identify the module processing
-# results in the storage structure. An SHA256 sum is considered as hash
-# algorithm and only the 16 first hexadecimal digits of the hash are kept.
-
-    function srm_hash() {
-
-        # Compute SHA256 sum #
-        SRM_SHA_S256=$(echo "$1" | sha256sum)
-
-        # Truncate SHA256 sum #
-        echo "${SRM_SHA_S256:0:16}"
-
-    }
-
-# Timestamps hashing
-#
-# This function returns the hashed (truncated) timestamps value for any given
-# timestamp according to the storage structure standards. It corresponds to a
-# simple division by ten.
-
-    function srm_tshash() {
-
-        # Retrieve unix timestamps #
-        SRM_TS_UNIX=(${1//_/ })
-
-        # Returns hashed timestmap #
-        echo $(( ${SRM_TS_UNIX[0]} / 100 ))
-
     }
 
 # Parallel configuration
@@ -319,24 +280,24 @@
     function srm_init() {
 
         # Node directory #
-        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS
 
         # Node structure #
-        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info
-        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH/data
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/data
 
         # Node classification #
-        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/classification
+        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/classification
 
         # Node filiation #
-        echo $SRM_MOD_NODE > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/filiation
+        echo $SRM_MOD_IHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/filiation
 
         # Node simplified commands #
-        echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/command
+        echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command
 
         # Node normalized commands history #
-        echo "$(date),$USER@$HOSTNAME,$HOSTTYPE,$(lsb_release -si) $(lsb_release -sr)" >> $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/history
-        echo "$ $SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/history
+        echo "$(date),$USER@$HOSTNAME,$HOSTTYPE,$(lsb_release -si) $(lsb_release -sr)" >> $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/history
+        echo "$ $SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/history
         
 
     }
@@ -355,117 +316,77 @@
     srm_arg $@
 
     # Compute module hash #
-    SRM_MOD_HASH=$(srm_hash "$SRM_CMD_HASH")
+    SRM_MOD_OHAS=$(echo "$SRM_CMD_HASH" | sha256sum | cut -c 1-16)
 
     # Switch on execution mode #
     if [ "$SRM_MOD_EXEC" == "default" ]; then
 
-        # Node initialization #
-        srm_init
+        # Check source node #
+        if [ ! -d $SRM_MNT_BASE/rawdata ]; then
 
-        # Display module summary #
-        srm_echo "SRM Kernel : $(basename $0)"
-        srm_echo "    cmd : $SRM_CMD_NORM"
-        srm_echo "    sha : $SRM_CMD_HASH"
-        srm_echo "    has : $SRM_MOD_HASH"
-        srm_echo "    src : $SRM_MOD_NODE"
+            # Display message #
+            srm_echo "SRM Kernel : Error, unknown or invalid source node"; SRM_SIG_EXIT=1
 
-        # Parse mmsr addresses #
-        for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
+        else
 
-            # Display mmsr address #
-            srm_echo "SRM Kernel : address $SRM_EXE_MSSR"
+            # Node initialization #
+            srm_init
 
-            # Reset statistic #
-            SRM_STA_POSE=0
-            SRM_STA_PROC=0
+            # Display module summary #
+            srm_echo "SRM Kernel : $(basename $0)"
+            srm_echo "    cmd : $SRM_CMD_NORM"
+            srm_echo "    sha : $SRM_CMD_HASH"
+            srm_echo "    ish : $SRM_MOD_IHAS"
+            srm_echo "    osh : $SRM_MOD_OHAS"
 
-            # Decompose mmsr address #
-            SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
-            SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
+            # Parse mmsr addresses #
+            for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
 
-            # Display mmsr address summary #
-            srm_echo "    mac : ${SRM_ADD_MAIN[0]}"
-            srm_echo "    mas : ${SRM_ADD_MAIN[1]}"
-            srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
-            srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
+                # Display mmsr address #
+                srm_echo "SRM Kernel : address $SRM_EXE_MSSR"
 
-            # Compose source node #
-            SRM_EXE_POSE=$SRM_MNT_BASE/rawdata
-            SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[0]}/master
-            SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[1]}/segment
-            SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[2]}/raw
+                # Decompose mmsr address #
+                SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
+                SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
 
-            # Display module porcessing #
-            srm_echo "SRM Kernel : processing"
+                # Display mmsr address summary #
+                srm_echo "    mac : ${SRM_ADD_MAIN[0]}"
+                srm_echo "    mas : ${SRM_ADD_MAIN[1]}"
+                srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
+                srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
 
-            # Parse mmrs address poses #
-            for SRM_EXE_HAS in $SRM_EXE_POSE/*; do
-            for SRM_EXE_SRC in $SRM_EXE_HAS/* ; do
+                # Display module porcessing #
+                srm_echo "SRM Kernel : processing"
 
-                # Update statistic #
-                SRM_STA_POSE=$(( $SRM_STA_POSE + 1 ))
+                # Parse mmrs address poses #
+                for SRM_EXE_SRC in $SRM_MNT_BASE/rawdata/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/raw/**/*_1.jp4; do
 
-                # Specific to this module - memorize information #
-                SRM_EXE_NAME=$(basename $SRM_EXE_SRC)
-                SRM_EXE_PATH=${SRM_EXE_SRC%/*}
+                    # Specific - decompose source object name #
+                    SRM_EXE_DEC=$(basename $SRM_EXE_SRC); SRM_EXE_DEC=(${SRM_EXE_DEC//_/ })
 
-                # Specific to this module - compose pseudo-source #
-                SRM_EXE_SRC=(${SRM_EXE_NAME//_/ })
-                SRM_EXE_SRC=${SRM_EXE_SRC[0]}_${SRM_EXE_SRC[1]}
-                SRM_EXE_SRC=$SRM_EXE_PATH/$SRM_EXE_SRC
+                    # Pose mmsr range detection #
+                    if (( $(srm_selected ${SRM_EXE_DEC[0]}_${SRM_EXE_DEC[1]} ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
 
-                # Pose mmsr range detection #
-                if (( $(srm_selected $(basename $SRM_EXE_SRC) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
-
-                    # Update statistic #
-                    SRM_STA_PROC=$(( $SRM_STA_PROC + 1 ))
-
-                    # Compose destination node #
-                    SRC_EXE_DST=$SRM_MNT_BASE/pose
-                    SRC_EXE_DST=$SRC_EXE_DST/$SRM_MOD_HASH/data
-                    SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[0]}/master
-                    SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[1]}/segment  
-                    SRC_EXE_DST=$SRC_EXE_DST/${SRM_ADD_MAIN[2]}/pose
-                    SRC_EXE_DST=$SRC_EXE_DST/$(srm_tshash $(basename $SRM_EXE_SRC))/$(basename $SRM_EXE_SRC)
-
-                    # Update parallel directive #
-                    SRM_PLL_POSE="$SRM_PLL_POSE ${SRM_ADD_MAIN[0]},$SRM_EXE_PATH/$SRM_EXE_NAME,$SRC_EXE_DST"
-
-                    # Update parallel index #
-                    SRM_PLL_INDX=$(( SRM_PLL_INDX + 1 ))
-
-                    # Check parallel size #
-                    if (( SRM_PLL_INDX >= SRM_PLL_SIZE )); then
-
-                        # Check parallel directive #
-                        if [ -n "$SRM_PLL_POSE" ]; then
-
-                            # Kernel script call #
-                            parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
-
-                        fi
-
-                        # Reset parallel directive #
-                        SRM_PLL_POSE=""
-
-                        # Reset parallel index #
-                        SRM_PLL_INDX=0
+                        # Update parallel directive #
+                        SRM_PLL_POSE="$SRM_PLL_POSE $SRM_MOD_IHAS,$SRM_MOD_OHAS,${SRM_ADD_MAIN[0]},${SRM_ADD_MAIN[1]},${SRM_ADD_MAIN[2]},${SRM_EXE_DEC[0]}_${SRM_EXE_DEC[1]}"
 
                     fi
 
-                fi
+                done
 
             done
-            done
 
-            # Display statistic #
-            srm_echo "SRM Kernel : statistics"
+            echo $SRM_PLL_POSE > test.dat
 
-            # Display selected poses #
-            srm_echo "    res : $SRM_STA_PROC/$SRM_STA_POSE"
+            # Check parallel directive #
+            if [ -n "$SRM_PLL_POSE" ]; then
 
-        done
+                # Kernel script call #
+                parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
+
+            fi
+
+        fi
 
     elif [ "$SRM_MOD_EXEC" == "nodes" ]; then
 
@@ -473,7 +394,7 @@
         for SRM_NOD_INPUT in $SRM_MNT_BASE/pose/*; do
 
             # Check for directories #
-            if [ -e $SRM_NOD_INPUT/info/$SRM_IO_ICLASS ]; then
+            if [ -e $SRM_NOD_INPUT/info/classification ] && [ "$(cat $SRM_NOD_INPUT/info/classification)" == "$SRM_IO_ICLASS" ]; then
 
                 # Display source node #
                 srm_echo "$(basename $SRM_NOD_INPUT)"
@@ -481,6 +402,11 @@
             fi
 
         done
+
+    elif [ "$SRM_MOD_EXEC" == "hash" ]; then
+
+        # Display module hash #
+        srm_echo "$SRM_MOD_OHAS"
 
     elif [ "$SRM_MOD_EXEC" == "iclass" ]; then
 

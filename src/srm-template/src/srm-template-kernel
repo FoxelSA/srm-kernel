@@ -158,7 +158,7 @@
     SRM_IO_IPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[0]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
     SRM_IO_OPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
 
-    # Check source and destination directory #
+    # Check source element #
     if [ ! -d $SRM_IO_IPOS ]; then
 
         # Display message #

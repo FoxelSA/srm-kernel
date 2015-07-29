@@ -36,21 +36,18 @@
 #       Attribution" section of <http://foxel.ch/license>.
 
     # Storage variables #
-    SRM_MNT_BASE="/data/" 
+    SRM_MNT_BASE="/data/"
 
-    # Communication variables #
-    SRM_IO_PATH=""
-
-    # Current pose variables #
-    SRM_EXE_POSE=""
-
-    # Processing variables #
-    SRM_IO_MAC=""
-    SRM_IO_SRC=""
-    SRM_IO_DST=""
+    # Execution variables #
+    SRM_KER_FORC="false"
 
     # Temporary storage variables #
     SRM_TMP_NAME=""
+
+    # Communication variables #
+    SRM_IO_PATH=""
+    SRM_IO_IPOS=""
+    SRM_IO_OPOS=""
 
 # Argument and parameter
 #
@@ -71,6 +68,9 @@
 
                 --mount-point)
                     SRM_MNT_BASE="$srm_prm"
+                ;;
+                --force)
+                    SRM_KER_FORC="$srm_prm"
                 ;;
                 --io)
                     SRM_IO_PATH="$srm_prm"
@@ -94,6 +94,22 @@
         
     }
 
+# Timestamps hashing
+#
+# This function returns the hashed (truncated) timestamps value for any given
+# timestamp according to the storage structure standards. It corresponds to a
+# simple division by ten.
+
+    function srm_tshash() {
+
+        # Retrieve unix timestamps #
+        SRM_TS_UNIX=(${1//_/ })
+
+        # Returns hashed timestmap #
+        echo $(( ${SRM_TS_UNIX[0]} / 100 ))
+
+    }
+
 # Temporary file system
 #
 # This function creates a temporary storage (tmpfs) in case module requires
@@ -103,8 +119,7 @@
     function srm_tmpfs() {
 
         # Create temporary storage path #
-        SRM_TMP_NAME=$(echo "$SRM_IO_PATH" | sha256sum)
-        SRM_TMP_NAME=/run/shm/${SRM_TMP_NAME:0:32}
+        SRM_TMP_NAME=/run/shm/$(echo "$SRM_IO_PATH" | sha256sum | cut -c 1-32)
 
         # Temporary storage management #
         if [ "$1" == "create" ]; then
@@ -138,17 +153,15 @@
 
     # Decompose IO buffer #
     SRM_IO_PART=(${SRM_IO_PATH//,/ })
-    
-    # Compose source and destination #
-    SRM_IO_MAC=${SRM_IO_PART[0]}
-    SRM_IO_SRC=${SRM_IO_PART[1]}
-    SRM_IO_DST=${SRM_IO_PART[2]}
 
-    # Compose pose identification #
-    SRM_EXE_POSE=$(basename $SRM_IO_SRC)
+    # Compose specific source #
+    SRM_IO_IPOS=$SRM_MNT_BASE/rawdata/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/raw/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
 
-    # Check source and destination directory #
-    if [ ! -f $SRM_IO_SRC ]; then
+    # Compose destination #
+    SRM_IO_OPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
+
+    # Check source element #
+    if [ ! -f ${SRM_IO_IPOS}_1.jp4 ]; then
 
         # Display message #
         srm_echo "SRM Kernel : Error, invalid module kernel io specification"
@@ -156,13 +169,29 @@
     else
 
         # Display message #
-        srm_echo "    rawdata $SRM_EXE_POSE of camera $SRM_IO_MAC"
+        srm_echo "    rawdata ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
-        # Create pose directory #
-        mkdir -p $SRM_IO_DST
+        # Check pose #
+        if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
-        # Create absolute soft link to rawdata #
-        ln -s -f $SRM_IO_SRC $SRM_IO_DST
+            # Create destination pose directory #
+            mkdir -p $SRM_IO_OPOS
+
+            # Initialize motherboards #
+            SRM_IO_MODE=1
+
+            # Parses device modules #
+            while [ -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 ]; do
+
+                # Create soft link #
+                ln -s -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 $SRM_IO_OPOS/
+
+                # Update index #
+                SRM_IO_MODE=$(( $SRM_IO_MODE + 1 ))
+
+            done
+
+        fi
 
     fi
 
