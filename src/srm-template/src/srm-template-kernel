@@ -35,19 +35,19 @@
 #       You are required to attribute the work as explained in the "Usage and
 #       Attribution" section of <http://foxel.ch/license>.
 
-    # Communication variables #
-    SRM_IO_PATH=""
+    # Storage variables #
+    SRM_MNT_BASE="/data/"
 
-    # Current pose variables #
-    SRM_EXE_POSE=""
-
-    # Processing variables #
-    SRM_IO_MAC=""
-    SRM_IO_SRC=""
-    SRM_IO_DST=""
+    # Execution variables #
+    SRM_KER_FORC="false"
 
     # Temporary storage variables #
     SRM_TMP_NAME=""
+
+    # Communication variables #
+    SRM_IO_PATH=""
+    SRM_IO_IPOS=""
+    SRM_IO_OPOS=""
 
 # Argument and parameter
 #
@@ -66,6 +66,12 @@
             # Switch on arguments #
             case $srm_arg in
 
+                --mount-point)
+                    SRM_MNT_BASE="$srm_prm"
+                ;;
+                --force)
+                    SRM_KER_FORC="$srm_prm"
+                ;;
                 --io)
                     SRM_IO_PATH="$srm_prm"
                 ;;
@@ -113,8 +119,7 @@
     function srm_tmpfs() {
 
         # Create temporary storage path #
-        SRM_TMP_NAME=$(echo "$SRM_IO_PATH" | sha256sum)
-        SRM_TMP_NAME=/run/shm/${SRM_TMP_NAME:0:32}
+        SRM_TMP_NAME=/run/shm/$(echo "$SRM_IO_PATH" | sha256sum | cut -c 1-32)
 
         # Temporary storage management #
         if [ "$1" == "create" ]; then
@@ -150,11 +155,11 @@
     SRM_IO_PART=(${SRM_IO_PATH//,/ })
 
     # Compose source and destination #
-    SRM_IO_SRC=${SRM_IO_PART[0]}/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[3]}/master/${SRM_IO_PART[4]}/segment/${SRM_IO_PART[5]}/pose/$(srm_tshash ${SRM_IO_PART[6]})/${SRM_IO_PART[6]}
-    SRM_IO_DST=${SRM_IO_PART[0]}/pose/${SRM_IO_PART[2]}/data/${SRM_IO_PART[3]}/master/${SRM_IO_PART[4]}/segment/${SRM_IO_PART[5]}/pose/$(srm_tshash ${SRM_IO_PART[6]})/${SRM_IO_PART[6]}
+    SRM_IO_IPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[0]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
+    SRM_IO_OPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
 
     # Check source and destination directory #
-    if [ ! -d $SRM_IO_SRC ]; then
+    if [ ! -d $SRM_IO_IPOS ]; then
 
         # Display message #
         srm_echo "SRM Kernel : Error, invalid module kernel io specification"
@@ -162,16 +167,21 @@
     else
 
         # Display message #
-        srm_echo "    pose ${SRM_IO_PART[6]} of camera ${SRM_IO_PART[3]}"
+        srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
         # Temporary storage #
         srm_tmpfs create
 
-        # Create destination pose directory #
-        mkdir -p $SRM_IO_DST
+        # Check pose #
+        if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
-        # ... #
-        cp $SRM_IO_SRC/cool-file.dat $SRM_IO_DST/cool-file.dat
+            # Create destination pose directory #
+            mkdir -p $SRM_IO_OPOS
+
+            # ... #
+            cp $SRM_IO_IPOS/cool-file.dat $SRM_IO_OPOS/cool-file.dat
+
+        fi
 
         # Temporary storage #
         srm_tmpfs delete

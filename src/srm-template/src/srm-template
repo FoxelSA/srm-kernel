@@ -38,10 +38,6 @@
     # Storage variables #
     SRM_MNT_BASE="/data/"
 
-    # Classification variables #
-    SRM_IO_ICLASS="eyesis4pi-raw"
-    SRM_IO_OCLASS="template-module"
-
     # Command variables #
     SRM_CMD_NORM="$(basename $0)"
     SRM_CMD_HASH="$(basename $0)"
@@ -62,6 +58,10 @@
 
     # Signal variables #
     SRM_SIG_EXIT=0
+
+    # Classification variables #
+    SRM_IO_ICLASS="eyesis4pi-raw"
+    SRM_IO_OCLASS="template-module"
 
 # Argument and parameter
 #
@@ -176,22 +176,6 @@
         # Display message #
         >&2 echo "$1"
         
-    }
-
-# Module hash
-#
-# This function computes the hash sum used to identify the module processing
-# results in the storage structure. An SHA256 sum is considered as hash
-# algorithm and only the 16 first hexadecimal digits of the hash are kept.
-
-    function srm_hash() {
-
-        # Compute SHA256 sum #
-        SRM_SHA_S256=$(echo "$1" | sha256sum)
-
-        # Truncate SHA256 sum #
-        echo "${SRM_SHA_S256:0:16}"
-
     }
 
 # Parallel configuration
@@ -335,7 +319,7 @@
     srm_arg $@
 
     # Compute module hash #
-    SRM_MOD_OHAS=$(srm_hash "$SRM_CMD_HASH")
+    SRM_MOD_OHAS=$(echo "$SRM_CMD_HASH" | sha256sum | cut -c 1-16)
 
     # Switch on execution mode #
     if [ "$SRM_MOD_EXEC" == "default" ]; then
@@ -363,8 +347,8 @@
                 srm_echo "SRM Kernel : $(basename $0)"
                 srm_echo "    cmd : $SRM_CMD_NORM"
                 srm_echo "    sha : $SRM_CMD_HASH"
-                srm_echo "    has : $SRM_MOD_OHAS"
-                srm_echo "    src : $SRM_MOD_IHAS"
+                srm_echo "    ish : $SRM_MOD_IHAS"
+                srm_echo "    osh : $SRM_MOD_OHAS"
 
                 # Parse mmsr addresses #
                 for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
@@ -386,8 +370,7 @@
                     srm_echo "SRM Kernel : processing"
 
                     # Parse mmrs address poses #
-                    for SRM_EXE_HAS in $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/*; do
-                    for SRM_EXE_SRC in $SRM_EXE_HAS/* ; do
+                    for SRM_EXE_SRC in $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/**/*; do
 
                         # Check for directorie  #
                         if [ -d $SRM_EXE_SRC ]; then
@@ -396,13 +379,12 @@
                             if (( $(srm_selected $(basename $SRM_EXE_SRC) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
 
                                 # Update parallel directive #
-                                SRM_PLL_POSE="$SRM_PLL_POSE $SRM_MNT_BASE,$SRM_MOD_IHAS,$SRM_MOD_OHAS,${SRM_ADD_MAIN[0]},${SRM_ADD_MAIN[1]},${SRM_ADD_MAIN[2]},$(basename $SRM_EXE_SRC)"
+                                SRM_PLL_POSE="$SRM_PLL_POSE $SRM_MOD_IHAS,$SRM_MOD_OHAS,${SRM_ADD_MAIN[0]},${SRM_ADD_MAIN[1]},${SRM_ADD_MAIN[2]},$(basename $SRM_EXE_SRC)"
 
                             fi
 
                         fi
 
-                    done
                     done
 
                 done
