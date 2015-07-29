@@ -45,7 +45,7 @@
     # Execution variables #
     SRM_MOD_EXEC="default"
     SRM_MOD_MMSR=""
-    SRM_MOD_IHAS="special-elphel-raw"
+    SRM_MOD_IHAS="rawdata"
     SRM_MOD_OHAS=""
 
     # Statistic variables #
@@ -375,8 +375,6 @@
                 done
 
             done
-
-            echo $SRM_PLL_POSE > test.dat
 
             # Check parallel directive #
             if [ -n "$SRM_PLL_POSE" ]; then
