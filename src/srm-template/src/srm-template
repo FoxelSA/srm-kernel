@@ -434,6 +434,11 @@
 
         done
 
+    elif [ "$SRM_MOD_EXEC" == "hash" ]; then
+
+        # Display module hash #
+        srm_echo "$SRM_MOD_OHAS"
+
     elif [ "$SRM_MOD_EXEC" == "iclass" ]; then
 
         # Display classification #
