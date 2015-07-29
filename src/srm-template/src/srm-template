@@ -407,7 +407,7 @@
         for SRM_NOD_INPUT in $SRM_MNT_BASE/pose/*; do
 
             # Check for directories #
-            if [ -e $SRM_NOD_INPUT/info/$SRM_IO_ICLASS ]; then
+            if [ -e $SRM_NOD_INPUT/info/classification ] && [ "$(cat $SRM_NOD_INPUT/info/classification)" == "$SRM_IO_ICLASS" ]; then
 
                 # Display source node #
                 srm_echo "$(basename $SRM_NOD_INPUT)"
