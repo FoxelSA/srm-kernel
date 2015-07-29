@@ -156,13 +156,13 @@
     else
 
         # Display message #
-        srm_echo "SRM Kernel : Processing pose $SRM_EXE_POSE of camera $SRM_IO_MAC"
+        srm_echo "    rawdata $SRM_EXE_POSE of camera $SRM_IO_MAC"
 
         # Create pose directory #
         mkdir -p $SRM_IO_DST
 
         # Create absolute soft link to rawdata #
-        ln -s $SRM_IO_SRC $SRM_IO_DST
+        ln -s -f $SRM_IO_SRC $SRM_IO_DST
 
     fi
 

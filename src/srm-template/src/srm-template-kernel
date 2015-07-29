@@ -156,7 +156,7 @@
     else
 
         # Display message #
-        srm_echo "SRM Kernel : Processing pose $SRM_EXE_POSE of camera $SRM_IO_MAC"
+        srm_echo "    pose $SRM_EXE_POSE of camera $SRM_IO_MAC"
 
         # Temporary storage #
         srm_tmpfs create

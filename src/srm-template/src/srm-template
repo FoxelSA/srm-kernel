@@ -104,6 +104,9 @@
                 --thread)
                     SRM_PLL_CONF="$srm_prm"
                 ;;
+                --block-size)
+                    SRM_PLL_SIZE=$srm_prm
+                ;;
                 -n)
                     SRM_MOD_NODE="$srm_prm"
                 ;;
@@ -410,6 +413,9 @@
                     SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[1]}/segment
                     SRM_EXE_POSE=$SRM_EXE_POSE/${SRM_ADD_MAIN[2]}/pose
 
+                    # Display module porcessing #
+                    srm_echo "SRM Kernel : processing"
+
                     # Parse mmrs address poses #
                     for SRM_EXE_HAS in $SRM_EXE_POSE/*; do
                     for SRM_EXE_SRC in $SRM_EXE_HAS/* ; do
@@ -467,6 +473,9 @@
                     done
 
                     # Display statistic #
+                    srm_echo "SRM Kernel : statistics"
+
+                    # Display selected poses #
                     srm_echo "    res : $SRM_STA_PROC/$SRM_STA_POSE"
 
                 done
