@@ -3,7 +3,7 @@
 #   make - configuration
 #
 
-    SRM_NAME=srm-eyesis4pi
+    SRM_NAME=srm-elphel
 
 #
 #   make - synchronize
