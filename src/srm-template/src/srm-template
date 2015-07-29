@@ -49,7 +49,8 @@
     # Execution variables #
     SRM_MOD_EXEC="default"
     SRM_MOD_MMSR=""
-    SRM_MOD_NODE=""
+    SRM_MOD_IHAS=""
+    SRM_MOD_OHAS=""
 
     # Statistic variables #
     SRM_STA_POSE=0
@@ -103,7 +104,7 @@
                     SRM_PLL_CONF="$srm_prm"
                 ;;
                 -n)
-                    SRM_MOD_NODE="$srm_prm"
+                    SRM_MOD_IHAS="$srm_prm"
                 ;;
 
             esac
@@ -298,24 +299,24 @@
     function srm_init() {
 
         # Node directory #
-        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS
 
         # Node structure #
-        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info
-        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_HASH/data
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/data
 
         # Node classification #
-        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/classification
+        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/classification
 
         # Node filiation #
-        echo $SRM_MOD_NODE > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/filiation
+        echo $SRM_MOD_IHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/filiation
 
         # Node simplified commands #
-        echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/command
+        echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command
 
         # Node normalized commands history #
-        echo "$(date),$USER@$HOSTNAME,$HOSTTYPE,$(lsb_release -si) $(lsb_release -sr)" >> $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/history
-        echo "$ $SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_HASH/info/history
+        echo "$(date),$USER@$HOSTNAME,$HOSTTYPE,$(lsb_release -si) $(lsb_release -sr)" >> $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/history
+        echo "$ $SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/history
         
 
     }
@@ -334,13 +335,13 @@
     srm_arg $@
 
     # Compute module hash #
-    SRM_MOD_HASH=$(srm_hash "$SRM_CMD_HASH")
+    SRM_MOD_OHAS=$(srm_hash "$SRM_CMD_HASH")
 
     # Switch on execution mode #
     if [ "$SRM_MOD_EXEC" == "default" ]; then
 
         # Check source node #
-        if [ ! -d $SRM_MNT_BASE/pose/$SRM_MOD_NODE/ ] || (( ${#SRM_MOD_NODE} != 16 )); then
+        if [ ! -d $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/ ] || (( ${#SRM_MOD_IHAS} != 16 )); then
 
             # Display message #
             srm_echo "SRM Kernel : Error, unknown or invalid source node"; SRM_SIG_EXIT=1
@@ -348,7 +349,7 @@
         else
 
             # Check source classification #
-            if [ "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_NODE/info/classification)" != "$SRM_IO_ICLASS" ]; then
+            if [ "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/info/classification)" != "$SRM_IO_ICLASS" ]; then
 
                 # Display message #
                 srm_echo "SRM Kernel : Error, invalid source classification"; SRM_SIG_EXIT=1
@@ -362,8 +363,8 @@
                 srm_echo "SRM Kernel : $(basename $0)"
                 srm_echo "    cmd : $SRM_CMD_NORM"
                 srm_echo "    sha : $SRM_CMD_HASH"
-                srm_echo "    has : $SRM_MOD_HASH"
-                srm_echo "    src : $SRM_MOD_NODE"
+                srm_echo "    has : $SRM_MOD_OHAS"
+                srm_echo "    src : $SRM_MOD_IHAS"
 
                 # Parse mmsr addresses #
                 for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
@@ -385,7 +386,7 @@
                     srm_echo "SRM Kernel : processing"
 
                     # Parse mmrs address poses #
-                    for SRM_EXE_HAS in $SRM_MNT_BASE/pose/$SRM_MOD_NODE/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/*; do
+                    for SRM_EXE_HAS in $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/*; do
                     for SRM_EXE_SRC in $SRM_EXE_HAS/* ; do
 
                         # Check for directorie  #
@@ -395,7 +396,7 @@
                             if (( $(srm_selected $(basename $SRM_EXE_SRC) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
 
                                 # Update parallel directive #
-                                SRM_PLL_POSE="$SRM_PLL_POSE $SRM_MNT_BASE,$SRM_MOD_NODE,$SRM_MOD_HASH,${SRM_ADD_MAIN[0]},${SRM_ADD_MAIN[1]},${SRM_ADD_MAIN[2]},$(basename $SRM_EXE_SRC)"
+                                SRM_PLL_POSE="$SRM_PLL_POSE $SRM_MNT_BASE,$SRM_MOD_IHAS,$SRM_MOD_OHAS,${SRM_ADD_MAIN[0]},${SRM_ADD_MAIN[1]},${SRM_ADD_MAIN[2]},$(basename $SRM_EXE_SRC)"
 
                             fi
 
