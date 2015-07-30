@@ -1,17 +1,24 @@
 
-## Standard refinement modules<br />Kernel modules
+## SRM - Standard Refinement Modules<br />Kernel modules
 
 <p align="justify">
-The standard refinement modules are the FOXEL data processing user front-end
-interface. They are responsible of the processing of their task providing a
-standardized interface.
+The standard refinement modules (SRM) are responsible of data processing engaged
+in the standard data storage structure. In this way, they are also responsible
+of maintaining the storage structure through the management of the data processing.
 </p>
 
 <p align="justify">
-This repository contains the FOXEL kernel <i>SRM</i> modules. Kernel modules are
-in charge of the implementation of the deep know-how of FOXEL. In other words,
-kernel modules are responsible for the curcial processing steps of the data
-aquired using FOXEL devices.
+The standard refinement modules are said standard in the way the data processing
+interface they offer is identical from a module to another, providing and simple
+and standardized front-end to data processing and storage management.
+</p>
+
+<p align="justify">
+This repository contains the kernel standard refinement module. The kernel
+modules are responsible of the most fundamental processing steps of the data
+coming out of the digitizing devices. In other word, they offer a data processing
+interface that allows to obtain most important and fundamental refined data that
+can be used by external modules to produce more refined and complex results.
 </p>
 
 ### Copyright
