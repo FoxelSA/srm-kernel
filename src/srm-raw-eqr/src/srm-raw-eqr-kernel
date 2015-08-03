@@ -154,14 +154,12 @@
     # Decompose IO buffer #
     SRM_IO_PART=(${SRM_IO_PATH//,/ })
 
-    # Compose specific source #
-    SRM_IO_IPOS=$SRM_MNT_BASE/rawdata/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/raw/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
-
-    # Compose destination #
+    # Compose source and destination #
+    SRM_IO_IPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[0]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
     SRM_IO_OPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
 
     # Check source element #
-    if [ ! -f ${SRM_IO_IPOS}_1.jp4 ]; then
+    if [ ! -d $SRM_IO_IPOS ]; then
 
         # Display message #
         srm_echo "SRM Kernel : Error, invalid module kernel io specification"
@@ -169,13 +167,16 @@
     else
 
         # Display message #
-        srm_echo "    rawdata ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
+        srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
         # Check pose #
         if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
             # Create destination pose directory #
             mkdir -p $SRM_IO_OPOS
+
+            # Refinement process #
+            post_processing $SRM_IO_IPOS $SRM_IO_OPOS -x $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/imagej-elphel/prefs.xml
 
         fi
 

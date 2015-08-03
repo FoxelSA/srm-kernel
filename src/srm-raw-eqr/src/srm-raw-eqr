@@ -45,7 +45,7 @@
     # Execution variables #
     SRM_MOD_EXEC="default"
     SRM_MOD_MMSR=""
-    SRM_MOD_IHAS="rawdata"
+    SRM_MOD_IHAS=""
     SRM_MOD_OHAS=""
 
     # Statistic variables #
@@ -61,7 +61,7 @@
 
     # Classification variables #
     SRM_IO_ICLASS="elphel-raw"
-    SRM_IO_OCLASS="elphel-raw"
+    SRM_IO_OCLASS="eqr-tile"
 
 # Argument and parameter
 #
@@ -102,6 +102,9 @@
                 ;;
                 --thread)
                     SRM_PLL_CONF="$srm_prm"
+                ;;
+                -n)
+                    SRM_MOD_IHAS="$srm_prm"
                 ;;
 
             esac
@@ -322,65 +325,77 @@
     if [ "$SRM_MOD_EXEC" == "default" ]; then
 
         # Check source node #
-        if [ ! -d $SRM_MNT_BASE/rawdata ]; then
+        if [ ! -d $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/ ] || (( ${#SRM_MOD_IHAS} != 16 )); then
 
             # Display message #
             srm_echo "SRM Kernel : Error, unknown or invalid source node"; SRM_SIG_EXIT=1
 
         else
 
-            # Node initialization #
-            srm_init
+            # Check source classification #
+            if [ "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/info/classification)" != "$SRM_IO_ICLASS" ]; then
 
-            # Display module summary #
-            srm_echo "SRM Kernel : $(basename $0)"
-            srm_echo "    cmd : $SRM_CMD_NORM"
-            srm_echo "    sha : $SRM_CMD_HASH"
-            srm_echo "    ish : $SRM_MOD_IHAS"
-            srm_echo "    osh : $SRM_MOD_OHAS"
+                # Display message #
+                srm_echo "SRM Kernel : Error, invalid source classification"; SRM_SIG_EXIT=1
 
-            # Parse mmsr addresses #
-            for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
+            else
 
-                # Display mmsr address #
-                srm_echo "SRM Kernel : address $SRM_EXE_MSSR"
+                # Node initialization #
+                srm_init
 
-                # Decompose mmsr address #
-                SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
-                SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
+                # Display module summary #
+                srm_echo "SRM Kernel : $(basename $0)"
+                srm_echo "    cmd : $SRM_CMD_NORM"
+                srm_echo "    sha : $SRM_CMD_HASH"
+                srm_echo "    ish : $SRM_MOD_IHAS"
+                srm_echo "    osh : $SRM_MOD_OHAS"
 
-                # Display mmsr address summary #
-                srm_echo "    mac : ${SRM_ADD_MAIN[0]}"
-                srm_echo "    mas : ${SRM_ADD_MAIN[1]}"
-                srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
-                srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
+                # Parse mmsr addresses #
+                for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
 
-                # Display module porcessing #
-                srm_echo "SRM Kernel : processing"
+                    # Display mmsr address #
+                    srm_echo "SRM Kernel : address $SRM_EXE_MSSR"
 
-                # Parse mmrs address poses #
-                for SRM_EXE_SRC in $SRM_MNT_BASE/rawdata/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/raw/**/*_1.jp4; do
+                    # Decompose mmsr address #
+                    SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
+                    SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
 
-                    # Specific - decompose source object name #
-                    SRM_EXE_DEC=$(basename $SRM_EXE_SRC); SRM_EXE_DEC=(${SRM_EXE_DEC//_/ })
+                    # Display mmsr address summary #
+                    srm_echo "    mac : ${SRM_ADD_MAIN[0]}"
+                    srm_echo "    mas : ${SRM_ADD_MAIN[1]}"
+                    srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
+                    srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
 
-                    # Pose mmsr range detection #
-                    if (( $(srm_selected ${SRM_EXE_DEC[0]}_${SRM_EXE_DEC[1]} ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
+                    # Display module porcessing #
+                    srm_echo "SRM Kernel : processing"
 
-                        # Update parallel directive #
-                        SRM_PLL_POSE="$SRM_PLL_POSE $SRM_MOD_IHAS,$SRM_MOD_OHAS,${SRM_ADD_MAIN[0]},${SRM_ADD_MAIN[1]},${SRM_ADD_MAIN[2]},${SRM_EXE_DEC[0]}_${SRM_EXE_DEC[1]}"
+                    # Parse mmrs address poses #
+                    for SRM_EXE_SRC in $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/**/*; do
 
-                    fi
+                        # Check for directorie  #
+                        if [ -d $SRM_EXE_SRC ]; then
+
+                            # Pose mmsr range detection #
+                            if (( $(srm_selected $(basename $SRM_EXE_SRC) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
+
+                                # Update parallel directive #
+                                SRM_PLL_POSE="$SRM_PLL_POSE $SRM_MOD_IHAS,$SRM_MOD_OHAS,${SRM_ADD_MAIN[0]},${SRM_ADD_MAIN[1]},${SRM_ADD_MAIN[2]},$(basename $SRM_EXE_SRC)"
+
+                            fi
+
+                        fi
+
+                    done
 
                 done
 
-            done
+                # Check parallel directive #
+                if [ -n "$SRM_PLL_POSE" ]; then
 
-            # Check parallel directive #
-            if [ -n "$SRM_PLL_POSE" ]; then
+                    # Kernel script call #
+                    parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
 
-                # Kernel script call #
-                parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
+                fi
 
             fi
 
