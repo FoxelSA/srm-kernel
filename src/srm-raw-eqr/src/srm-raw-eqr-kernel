@@ -143,7 +143,9 @@
 
 # Module kernel complementary function
 #
-#
+# This function reads the source configuration xml file for the Elphel plugin
+# responsible of raw data image processing. This function replaces the required
+# path in the xml to adapt the process to the desired pose.
 
     function srm_cmpxml() {
 
