@@ -75,7 +75,7 @@
                 --io)
                     SRM_IO_PATH="$srm_prm"
                 ;;
-                --m)
+                -m)
                     SRM_KER_MODE="$srm_prm"
                 ;;
 
