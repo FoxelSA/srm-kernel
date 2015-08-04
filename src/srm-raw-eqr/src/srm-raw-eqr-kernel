@@ -141,6 +141,77 @@
 
     }
 
+# Module kernel complementary function
+#
+#
+
+    function srm_cmpxml() {
+
+        # Clear modified XML #
+        > $2
+
+        # Read XML by line #
+        while read SRM_LINE; do   
+
+            # Detects specific keys #
+            if [[ $SRM_LINE == *"CORRECTION_PARAMETERS.smoothKernelDirectory"* ]]; then
+
+                # Modulated exportation #
+                echo "<entry key=\"CORRECTION_PARAMETERS.smoothKernelDirectory\">$3/calibration/kernels/smooth</entry>" >> $2
+
+            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.sharpKernelDirectory"* ]]; then
+
+                # Modulated exportation #
+                echo "<entry key=\"CORRECTION_PARAMETERS.sharpKernelDirectory\">$3/calibration/kernels/sharp</entry>" >> $2
+
+            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.sensorDirectory"* ]]; then
+
+                # Modulated exportation #
+                echo "<entry key=\"CORRECTION_PARAMETERS.sensorDirectory\">$3/calibration/sensors</entry>" >> $2
+
+            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.equirectangularDirectory"* ]]; then
+
+                # Modulated exportation #
+                echo "<entry key=\"CORRECTION_PARAMETERS.equirectangularDirectory\">$3/calibration/maps</entry>" >> $2
+
+            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.resultsDirectory"* ]]; then
+
+                # Modulated exportation #
+                echo "<entry key=\"CORRECTION_PARAMETERS.resultsDirectory\">$5</entry>" >> $2
+
+            elif [[ $SRM_LINE == *"</properties>"* ]]; then
+
+                # Reset count index #
+                SRM_LS_NUMS=0
+
+                # Enumeration of source file #
+                for SRM_LS_FILE in $4/*.jp4; do
+
+                    # Modulated exportation #
+                    echo "<entry key=\"CORRECTION_PARAMETERS.sourcePath${SRM_LS_NUMS}\">$SRM_LS_FILE</entry>" >> $2
+
+                    # Update index #
+                    SRM_LS_NUMS=$(( $SRM_LS_NUMS + 1 ))
+
+                done
+
+                # Modulated exportation #
+                echo "<entry key=\"CORRECTION_PARAMETERS.sourcePaths\">$SRM_LS_NUMS</entry>" >> $2
+
+                # Export line #
+                echo $SRM_LINE >> $2
+
+            elif [[ ! $SRM_LINE == *"CORRECTION_PARAMETERS.sourcePath"* ]]; then
+
+                # Export line #
+                echo $SRM_LINE >> $2
+
+            fi
+
+        done < $1
+
+    }
+
 # Module kernel function
 #
 # The following instructions are responsible of performing the tasks the module
@@ -169,16 +240,25 @@
         # Display message #
         srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
+        # Temporary storage #
+        srm_tmpfs create
+
         # Check pose #
         if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
             # Create destination pose directory #
             mkdir -p $SRM_IO_OPOS
 
+            # Compose modulated configuration #
+            srm_cmpxml $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/imagej-elphel/prefs.xml $SRM_TMP_NAME/elphel-correction.xml $SRM_MNT_BASE/camera/${SRM_IO_PART[2]} $SRM_IO_IPOS $SRM_IO_OPOS
+
             # Refinement process #
-            post_processing $SRM_IO_IPOS $SRM_IO_OPOS -x $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/imagej-elphel/prefs.xml
+            ImageJ-linux64 --headless --allow-multiple --mem 7150m --run Eyesis_Correction prefs=$SRM_TMP_NAME/elphel-correction.xml 2>&1
 
         fi
+
+        # Temporary storage #
+        srm_tmpfs delete
 
     fi
 
