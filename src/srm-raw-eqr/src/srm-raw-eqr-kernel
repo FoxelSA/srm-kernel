@@ -146,6 +146,9 @@
 
 # Module kernel specific function - Elphel-plugin
 #
+# This function implements the Elphel plugin call to perform refinement of the
+# data considered by the module. It starts by editing the configuration file in
+# order to specify the correct path befor to call the plugin.
 
     function srm_elphel_plugin() {
 
