@@ -184,6 +184,11 @@
                 # Modulated exportation #
                 echo "<entry key=\"CORRECTION_PARAMETERS.resultsDirectory\">$5</entry>" >> $2
 
+            elif [[ $SRM_LINE == *"THREADS_MAX"* ]]; then
+
+                # Modulated exportation #
+                echo "<entry key=\"THREADS_MAX\">1</entry>" >> $2
+
             elif [[ $SRM_LINE == *"</properties>"* ]]; then
 
                 # Reset count index #
@@ -216,7 +221,7 @@
         done < $1
 
         # Elphel plugin #
-        ImageJ-linux64 --headless --allow-multiple --mem 7150m --run Eyesis_Correction prefs=$2 2>&1
+        ImageJ-linux64 --headless --mem 7150m --run Eyesis_Correction prefs=$2 &> /dev/null
 
     }
 
@@ -258,7 +263,7 @@
             mkdir -p $SRM_IO_OPOS
 
             # Check module refinement mode #
-            if [ "$SRM_KER_MODE" == "Elphel-plugin" ]; then
+            if [ "$SRM_KER_MODE" == "elphel-plugin" ]; then
 
                 # Refinement process #
                 srm_elphel_plugin $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/imagej-elphel/prefs.xml $SRM_TMP_NAME/elphel-correction.xml $SRM_MNT_BASE/camera/${SRM_IO_PART[2]} $SRM_IO_IPOS $SRM_IO_OPOS
