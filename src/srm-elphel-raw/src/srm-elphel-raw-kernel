@@ -49,6 +49,12 @@
     SRM_IO_IPOS=""
     SRM_IO_OPOS=""
 
+    # Parallel variables #
+    SRM_PLL_CONF="1"
+
+    # Signal variables #
+    SRM_SIG_EXIT=0
+
 # Argument and parameter
 #
 # This function reads the module script arguments and parameters using the
@@ -68,6 +74,9 @@
 
                 --mount-point)
                     SRM_MNT_BASE="$srm_prm"
+                ;;
+                --local-thread)
+                    SRM_PLL_CONF="$srm_prm"
                 ;;
                 --force)
                     SRM_KER_FORC="$srm_prm"

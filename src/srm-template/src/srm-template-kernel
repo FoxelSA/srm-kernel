@@ -75,11 +75,11 @@
                 --mount-point)
                     SRM_MNT_BASE="$srm_prm"
                 ;;
-                --force)
-                    SRM_KER_FORC="$srm_prm"
-                ;;
                 --local-thread)
                     SRM_PLL_CONF="$srm_prm"
+                ;;
+                --force)
+                    SRM_KER_FORC="$srm_prm"
                 ;;
                 --io)
                     SRM_IO_PATH="$srm_prm"
