@@ -232,6 +232,39 @@
         # Elphel plugin #
         ImageJ-linux64 --headless --mem 7150m --run Eyesis_Correction prefs=$2 &> /dev/null
 
+        # Parsing result image #
+        for SRM_EXE_FILE in $5/*.tiff; do
+
+            # Extract file basename #
+            SRM_EXE_BASE=$(basename $SRM_EXE_FILE)
+
+            # Decompose basename #
+            SRM_EXE_ELEM=(${SRM_EXE_BASE//-/ })
+
+            # Recompose basename #
+            SRM_EXE_NAME=${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}
+
+            # Detect splitted tiles #
+            if [[ $SRM_EXE_BASE == *"-LEFT"* ]]; then
+
+                # Add suffix to recomposed basename #
+                SRM_EXE_NAME=${SRM_EXE_NAME}_L
+
+            elif [[ $SRM_EXE_BASE == *"-RIGHT"* ]]; then
+
+                # Add suffix to recomposed basename #
+                SRM_EXE_NAME=${SRM_EXE_NAME}_R
+
+            fi
+
+            # Adding extension to recomposed basename #
+            SRM_EXE_NAME=$5/$SRM_EXE_NAME.tiff
+
+            # Rename result file #
+            mv $SRM_EXE_FILE $SRM_EXE_NAME
+
+        done
+
     }
 
 # Module kernel function
