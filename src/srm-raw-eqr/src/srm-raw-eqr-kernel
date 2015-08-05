@@ -257,6 +257,9 @@
         # Display message #
         srm_echo "SRM Kernel : Error, invalid module kernel io specification"
 
+        # Update exit code #
+        SRM_SIG_EXIT=1
+
     else
 
         # Display message #
@@ -281,6 +284,9 @@
 
                 # Display message #
                 srm_echo "SRM Kernel : Error, invalid module kernel mode specification"
+
+                # Update exit code #
+                SRM_SIG_EXIT=1
 
             fi
 
