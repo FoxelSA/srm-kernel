@@ -186,6 +186,14 @@
         # Check pose #
         if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
+            # Check destination pose directory #
+            if [ -d $SRM_IO_OPOS ]; then
+
+                # Remove previous processed data #
+                rm -rf $SRM_IO_OPOS
+
+            fi
+
             # Create destination pose directory #
             mkdir -p $SRM_IO_OPOS
 

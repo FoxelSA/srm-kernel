@@ -304,11 +304,19 @@
         # Check pose #
         if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
-            # Create destination pose directory #
-            mkdir -p $SRM_IO_OPOS
-
             # Check module refinement mode #
             if [ "$SRM_KER_MODE" == "elphel-plugin" ]; then
+
+                # Check destination pose directory #
+                if [ -d $SRM_IO_OPOS ]; then
+
+                    # Remove previous processed data #
+                    rm -rf $SRM_IO_OPOS
+
+                fi
+
+                # Create destination pose directory #
+                mkdir -p $SRM_IO_OPOS
 
                 # Refinement process #
                 srm_elphel_plugin $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/imagej-elphel/prefs.xml $SRM_TMP_NAME/elphel-correction.xml $SRM_MNT_BASE/camera/${SRM_IO_PART[2]} $SRM_IO_IPOS $SRM_IO_OPOS
