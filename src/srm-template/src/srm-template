@@ -330,6 +330,9 @@
             # Display message #
             srm_echo "SRM Kernel : Error, unknown or invalid source node"; SRM_SIG_EXIT=1
 
+            # Update exit code #
+            SRM_SIG_EXIT=1
+
         else
 
             # Check source classification #
@@ -337,6 +340,9 @@
 
                 # Display message #
                 srm_echo "SRM Kernel : Error, invalid source classification"; SRM_SIG_EXIT=1
+
+                # Update exit code #
+                SRM_SIG_EXIT=1
 
             else
 
@@ -435,6 +441,9 @@
 
         # Display message #
         srm_echo "SRM - Kernel : Error, invalid module mode"; SRM_SIG_EXIT=1
+
+        # Update exit code #
+        SRM_SIG_EXIT=1
 
     fi
 
