@@ -336,7 +336,7 @@
         else
 
             # Check source classification #
-            if [ "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/info/classification)" != "$SRM_IO_ICLASS" ]; then
+            if [ "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/info/oclass)" != "$SRM_IO_ICLASS" ]; then
 
                 # Display message #
                 srm_echo "SRM Kernel : Error, invalid source classification"; SRM_SIG_EXIT=1
