@@ -290,18 +290,18 @@
         mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/data
 
         # Node classification #
-        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/classification
+        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/oclass
+        echo $SRM_IO_ICLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/iclass
 
         # Node filiation #
-        echo $SRM_MOD_IHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/filiation
+        echo $SRM_MOD_OHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/ohash
+        echo $SRM_MOD_IHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/ihash
 
         # Node simplified commands #
-        echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command
+        echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command-hash
 
-        # Node normalized commands history #
-        echo "$(date),$USER@$HOSTNAME,$HOSTTYPE,$(lsb_release -si) $(lsb_release -sr)" >> $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/history
-        echo "$ $SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/history
-        
+        # Node normalized commands #
+        echo "$(date)|$USER@$HOSTNAME\$$SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command-history
 
     }
 
