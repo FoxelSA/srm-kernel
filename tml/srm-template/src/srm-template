@@ -60,7 +60,7 @@
     SRM_SIG_EXIT=0
 
     # Classification variables #
-    SRM_IO_ICLASS="eyesis4pi-raw"
+    SRM_IO_ICLASS="template-module"
     SRM_IO_OCLASS="template-module"
 
 # Argument and parameter
