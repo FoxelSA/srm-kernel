@@ -60,8 +60,8 @@
     SRM_SIG_EXIT=0
 
     # Classification variables #
-    SRM_IO_ICLASS="elphel-raw"
-    SRM_IO_OCLASS="elphel-raw"
+    SRM_IO_ICLASS="rawdata-specific"
+    SRM_IO_OCLASS="raw"
 
 # Argument and parameter
 #
