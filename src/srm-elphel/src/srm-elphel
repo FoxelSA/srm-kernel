@@ -287,12 +287,12 @@
         mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/data
 
         # Node classification #
-        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/oclass
-        echo $SRM_IO_ICLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/iclass
+        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/class-output
+        echo $SRM_IO_ICLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/class-input
 
         # Node filiation #
-        echo $SRM_MOD_OHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/ohash
-        echo $SRM_MOD_IHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/ihash
+        echo $SRM_MOD_OHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/hash-output
+        echo $SRM_MOD_IHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/hash-input
 
         # Node simplified commands #
         echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command-hash
