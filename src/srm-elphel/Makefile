@@ -3,7 +3,7 @@
 #   make - configuration
 #
 
-    SRM_NAME=srm-elphel-raw
+    SRM_NAME=srm-elphel
 
 #
 #   make - synchronize

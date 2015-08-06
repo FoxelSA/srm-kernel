@@ -154,7 +154,7 @@
 #
 # The following instructions are responsible of performing the tasks the module
 # is supposed to do and constitute the main kernel function. The kernel function
-# is broadcasted to the different processing computer according to the available
+# is broadcasted to the different available computers according to the specified
 # network topology.
 
     # Arguments and parameters #
@@ -180,36 +180,44 @@
 
     else
 
-        # Display message #
-        srm_echo "    rawdata ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
+        # Check device #
+        if [[ ! $(cat $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | grep "constructor=") == *"=elphel" ]]; then
 
-        # Check pose #
-        if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
+            # Display message #
+            srm_echo "SRM Kernel : Error, unknown device constructor"
 
-            # Check destination pose directory #
-            if [ -d $SRM_IO_OPOS ]; then
+            # Update exit code #
+            SRM_SIG_EXIT=1
 
-                # Remove previous processed data #
-                rm -rf $SRM_IO_OPOS
+        else
+
+            # Display message #
+            srm_echo "    rawdata ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
+
+            # Check pose #
+            if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
+
+                # Remove previous data #
+                if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
+
+                # Create destination pose directory #
+                mkdir -p $SRM_IO_OPOS
+
+                # Initialize motherboards #
+                SRM_IO_MODE=1
+
+                # Parses device modules #
+                while [ -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 ]; do
+
+                    # Create soft link #
+                    ln -s -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 $SRM_IO_OPOS/
+
+                    # Update index #
+                    SRM_IO_MODE=$(( $SRM_IO_MODE + 1 ))
+
+                done
 
             fi
-
-            # Create destination pose directory #
-            mkdir -p $SRM_IO_OPOS
-
-            # Initialize motherboards #
-            SRM_IO_MODE=1
-
-            # Parses device modules #
-            while [ -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 ]; do
-
-                # Create soft link #
-                ln -s -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 $SRM_IO_OPOS/
-
-                # Update index #
-                SRM_IO_MODE=$(( $SRM_IO_MODE + 1 ))
-
-            done
 
         fi
 
