@@ -40,6 +40,7 @@
 
     # Execution variables #
     SRM_KER_FORC="false"
+    SRM_KER_MODE="unknown"
 
     # Temporary storage variables #
     SRM_TMP_NAME=""
@@ -153,7 +154,7 @@
 
     }
 
-# Module kernel specific function - Enblend@Eyesis4Pi
+# Module kernel specific function (enblend@eyesis4pi)
 #
 # This function implements the enblend stitching procedure using source data
 # coming from an Eyesis4Pi camera device. It simply stitches the upper, middle
@@ -166,7 +167,7 @@
         SRM_EXE_TIME=(${SRM_EXE_TIME//_/ })
 
         # Stitching of upper band #
-        enblend -w -o $SRM_TMP_NAME/tmp_top_band.tiff \
+        enblend --wrap='horizontal' -o $SRM_TMP_NAME/tmp_top_band.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_R.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_05.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_06.tiff \
@@ -178,7 +179,7 @@
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_L.tiff &> /dev/null
 
         # Stitching of middle band #
-        enblend -w -o $SRM_TMP_NAME/tmp_mid_band.tiff \
+        enblend --wrap='horizontal' -o $SRM_TMP_NAME/tmp_mid_band.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_R.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_13.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_14.tiff \
@@ -190,7 +191,7 @@
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_L.tiff &> /dev/null
 
         # Stitching of bottom band #
-        enblend -w -o $SRM_TMP_NAME/tmp_bot_band.tiff \
+        enblend --wrap='horizontal' -o $SRM_TMP_NAME/tmp_bot_band.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_R.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_21.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_22.tiff \
@@ -213,7 +214,7 @@
 #
 # The following instructions are responsible of performing the tasks the module
 # is supposed to do and constitute the main kernel function. The kernel function
-# is broadcasted to the different processing computer according to the available
+# is broadcasted to the different available computers according to the specified
 # network topology.
 
     # Arguments and parameters #
@@ -240,25 +241,20 @@
         # Display message #
         srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
-        # Temporary storage #
-        srm_tmpfs create
+        # Check module mode #
+        if [ "$SRM_KER_MODE" == "enblend" ]; then
 
-        # Check pose #
-        if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
+            # Check device type #
+            if [[ $(cat $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | grep "type=") == *"=eyesis4pi" ]]; then
 
-            # Check stitching method #
-            if [ "$SRM_KER_MODE" == "enblend" ]; then
+                # Check pose state #
+                if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
-                # Check camere device #
-                if [[ $(cat $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | grep "type=") == *"=eyesis4pi"* ]]; then
+                    # Temporary storage #
+                    srm_tmpfs create
 
-                    # Check destination pose directory #
-                    if [ -d $SRM_IO_OPOS ]; then
-
-                        # Remove previous processed data #
-                        rm -rf $SRM_IO_OPOS
-
-                    fi
+                    # Remove previous data #
+                    if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
 
                     # Create destination pose directory #
                     mkdir -p $SRM_IO_OPOS
@@ -266,30 +262,30 @@
                     # Refinement process #
                     srm_enblend_eysis4pi $SRM_IO_IPOS $SRM_IO_OPOS
 
-                else
-
-                    # Display message #
-                    srm_echo "SRM Kernel : Error, unknwon type of device"
-
-                    # Update exit code #
-                    SRM_SIG_EXIT=1
+                    # Temporary storage #
+                    srm_tmpfs delete
 
                 fi
 
             else
 
                 # Display message #
-                srm_echo "SRM Kernel : Error, invalid module kernel mode specification"
+                srm_echo "SRM Kernel : Error, unknown device type"
 
                 # Update exit code #
                 SRM_SIG_EXIT=1
 
             fi
 
-        fi
+        else
 
-        # Temporary storage #
-        srm_tmpfs delete
+            # Display message #
+            srm_echo "SRM Kernel : Error, unknown module mode"
+
+            # Update exit code #
+            SRM_SIG_EXIT=1
+
+        fi
 
     fi
 

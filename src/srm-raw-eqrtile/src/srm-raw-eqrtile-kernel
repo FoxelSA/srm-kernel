@@ -154,7 +154,7 @@
 
     }
 
-# Module kernel specific function - Elphel-plugin
+# Module kernel specific function (elphel-plugin@elphel)
 #
 # This function implements the Elphel plugin call to perform refinement of the
 # data considered by the module. It starts by editing the configuration file in

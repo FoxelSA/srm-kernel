@@ -60,7 +60,7 @@
     SRM_SIG_EXIT=0
 
     # Classification variables #
-    SRM_IO_ICLASS="eqr-tile"
+    SRM_IO_ICLASS="eqrtile"
     SRM_IO_OCLASS="panroama"
 
 # Argument and parameter
