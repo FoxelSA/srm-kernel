@@ -153,9 +153,11 @@
 
     }
 
-# Module kernel specific function - Enblend@Eyesis4pi
+# Module kernel specific function - Enblend@Eyesis4Pi
 #
-# 
+# This function implements the enblend stitching procedure using source data
+# coming from an Eyesis4Pi camera device. It simply stitches the upper, middle
+# and downer band befor to stitch the band together.
 
     function srm_enblend_eysis4pi() {
 
