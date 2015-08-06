@@ -60,8 +60,8 @@
     SRM_SIG_EXIT=0
 
     # Classification variables #
-    SRM_IO_ICLASS="elphel-raw"
-    SRM_IO_OCLASS="eqr-tile"
+    SRM_IO_ICLASS="raw"
+    SRM_IO_OCLASS="eqrtile"
 
 # Argument and parameter
 #

@@ -271,7 +271,7 @@
 #
 # The following instructions are responsible of performing the tasks the module
 # is supposed to do and constitute the main kernel function. The kernel function
-# is broadcasted to the different processing computer according to the available
+# is broadcasted to the different available computers according to the specified
 # network topology.
 
     # Arguments and parameters #
@@ -298,43 +298,51 @@
         # Display message #
         srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
-        # Temporary storage #
-        srm_tmpfs create
+        # Check module mode #
+        if [ "$SRM_KER_MODE" == "elphel-plugin" ]; then
 
-        # Check pose #
-        if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
+            # Check device constructor #
+            if [[ $(cat $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | grep "constructor=") == *"=elphel" ]]; then
 
-            # Check module refinement mode #
-            if [ "$SRM_KER_MODE" == "elphel-plugin" ]; then
+                # Check pose state #
+                if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
-                # Check destination pose directory #
-                if [ -d $SRM_IO_OPOS ]; then
+                    # Temporary storage #
+                    srm_tmpfs create
 
-                    # Remove previous processed data #
-                    rm -rf $SRM_IO_OPOS
+                    # Remove previous data #
+                    if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
+
+                    # Create destination pose directory #
+                    mkdir -p $SRM_IO_OPOS
+
+                    # Refinement process #
+                    srm_elphel_plugin $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/imagej-elphel/prefs.xml $SRM_TMP_NAME/elphel-correction.xml $SRM_MNT_BASE/camera/${SRM_IO_PART[2]} $SRM_IO_IPOS $SRM_IO_OPOS
+
+                    # Temporary storage #
+                    srm_tmpfs delete
 
                 fi
-
-                # Create destination pose directory #
-                mkdir -p $SRM_IO_OPOS
-
-                # Refinement process #
-                srm_elphel_plugin $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/imagej-elphel/prefs.xml $SRM_TMP_NAME/elphel-correction.xml $SRM_MNT_BASE/camera/${SRM_IO_PART[2]} $SRM_IO_IPOS $SRM_IO_OPOS
 
             else
 
                 # Display message #
-                srm_echo "SRM Kernel : Error, invalid module kernel mode specification"
+                srm_echo "SRM Kernel : Error, unknown device constructor"
 
                 # Update exit code #
                 SRM_SIG_EXIT=1
 
             fi
 
-        fi
+        else
 
-        # Temporary storage #
-        srm_tmpfs delete
+            # Display message #
+            srm_echo "SRM Kernel : Error, unknown module mode"
+
+            # Update exit code #
+            SRM_SIG_EXIT=1
+
+        fi
 
     fi
 

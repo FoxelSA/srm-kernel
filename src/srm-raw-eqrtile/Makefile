@@ -3,7 +3,7 @@
 #   make - configuration
 #
 
-    SRM_NAME=srm-raw-eqr
+    SRM_NAME=srm-raw-eqrtile
 
 #
 #   make - synchronize

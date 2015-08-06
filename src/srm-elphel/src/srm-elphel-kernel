@@ -180,21 +180,13 @@
 
     else
 
-        # Check device #
-        if [[ ! $(cat $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | grep "constructor=") == *"=elphel" ]]; then
+        # Display message #
+        srm_echo "    rawdata ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
-            # Display message #
-            srm_echo "SRM Kernel : Error, unknown device constructor"
+        # Check device constructor #
+        if [[ $(cat $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | grep "constructor=") == *"=elphel" ]]; then
 
-            # Update exit code #
-            SRM_SIG_EXIT=1
-
-        else
-
-            # Display message #
-            srm_echo "    rawdata ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
-
-            # Check pose #
+            # Check pose state #
             if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
                 # Remove previous data #
@@ -218,6 +210,14 @@
                 done
 
             fi
+
+        else
+
+            # Display message #
+            srm_echo "SRM Kernel : Error, unknown device constructor"
+
+            # Update exit code #
+            SRM_SIG_EXIT=1
 
         fi
 
