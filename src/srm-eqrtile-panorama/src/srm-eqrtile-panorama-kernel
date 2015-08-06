@@ -84,6 +84,9 @@
                 --io)
                     SRM_IO_PATH="$srm_prm"
                 ;;
+                -m)
+                    SRM_KER_MODE="$srm_prm"
+                ;;
 
             esac
 
@@ -150,6 +153,60 @@
 
     }
 
+# Module kernel specific function - Enblend@Eyesis4pi
+#
+# 
+
+    function srm_enblend_eysis4pi() {
+
+        # Extract timestamps #
+        SRM_EXE_TIME=$(basename $1); 
+        SRM_EXE_TIME=(${SRM_EXE_TIME//_/ })
+
+        # Stitching of upper band #
+        enblend -w -o $SRM_TMP_NAME/tmp_top_band.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_R.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_05.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_06.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_07.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_00.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_01.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_02.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_03.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_L.tiff &> /dev/null
+
+        # Stitching of middle band #
+        enblend -w -o $SRM_TMP_NAME/tmp_mid_band.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_R.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_13.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_14.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_15.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_08.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_09.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_10.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_11.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_L.tiff &> /dev/null
+
+        # Stitching of bottom band #
+        enblend -w -o $SRM_TMP_NAME/tmp_bot_band.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_R.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_21.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_22.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_23.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_16.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_17.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_18.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_19.tiff \
+        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_L.tiff &> /dev/null
+
+        # Stitching horizontal bands #
+        enblend --wrap='vertical' -o $2/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff \
+        $SRM_TMP_NAME/tmp_top_band.tiff \
+        $SRM_TMP_NAME/tmp_mid_band.tiff \
+        $SRM_TMP_NAME/tmp_bot_band.tiff &> /dev/null
+
+    }
+
 # Module kernel function
 #
 # The following instructions are responsible of performing the tasks the module
@@ -163,14 +220,12 @@
     # Decompose IO buffer #
     SRM_IO_PART=(${SRM_IO_PATH//,/ })
 
-    # Compose specific source #
-    SRM_IO_IPOS=$SRM_MNT_BASE/rawdata/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/raw/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
-
-    # Compose destination #
+    # Compose source and destination #
+    SRM_IO_IPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[0]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
     SRM_IO_OPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
 
     # Check source element #
-    if [ ! -f ${SRM_IO_IPOS}_1.jp4 ]; then
+    if [ ! -d $SRM_IO_IPOS ]; then
 
         # Display message #
         srm_echo "SRM Kernel : Error, invalid module kernel io specification"
@@ -181,37 +236,58 @@
     else
 
         # Display message #
-        srm_echo "    rawdata ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
+        srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
+
+        # Temporary storage #
+        srm_tmpfs create
 
         # Check pose #
         if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
-            # Check destination pose directory #
-            if [ -d $SRM_IO_OPOS ]; then
+            # Check stitching method #
+            if [ "$SRM_KER_MODE" == "enblend" ]; then
 
-                # Remove previous processed data #
-                rm -rf $SRM_IO_OPOS
+                # Check camere device #
+                if [[ $(cat $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | grep "type=") == *"=eyesis4pi"* ]]; then
+
+                    # Check destination pose directory #
+                    if [ -d $SRM_IO_OPOS ]; then
+
+                        # Remove previous processed data #
+                        rm -rf $SRM_IO_OPOS
+
+                    fi
+
+                    # Create destination pose directory #
+                    mkdir -p $SRM_IO_OPOS
+
+                    # Refinement process #
+                    srm_enblend_eysis4pi $SRM_IO_IPOS $SRM_IO_OPOS
+
+                else
+
+                    # Display message #
+                    srm_echo "SRM Kernel : Error, unknwon type of device"
+
+                    # Update exit code #
+                    SRM_SIG_EXIT=1
+
+                fi
+
+            else
+
+                # Display message #
+                srm_echo "SRM Kernel : Error, invalid module kernel mode specification"
+
+                # Update exit code #
+                SRM_SIG_EXIT=1
 
             fi
 
-            # Create destination pose directory #
-            mkdir -p $SRM_IO_OPOS
-
-            # Initialize motherboards #
-            SRM_IO_MODE=1
-
-            # Parses device modules #
-            while [ -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 ]; do
-
-                # Create soft link #
-                ln -s -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 $SRM_IO_OPOS/
-
-                # Update index #
-                SRM_IO_MODE=$(( $SRM_IO_MODE + 1 ))
-
-            done
-
         fi
+
+        # Temporary storage #
+        srm_tmpfs delete
 
     fi
 

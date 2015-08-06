@@ -3,7 +3,7 @@
 #   make - configuration
 #
 
-    SRM_NAME=srm-template
+    SRM_NAME=srm-eqrtile-panorama
 
 #
 #   make - synchronize

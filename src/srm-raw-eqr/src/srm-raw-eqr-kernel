@@ -165,7 +165,7 @@
         > $2
 
         # Read XML by line #
-        while read SRM_LINE; do   
+        while read SRM_LINE; do
 
             # Detects specific keys #
             if [[ $SRM_LINE == *"CORRECTION_PARAMETERS.smoothKernelDirectory"* ]]; then
@@ -196,7 +196,7 @@
             elif [[ $SRM_LINE == *"THREADS_MAX"* ]]; then
 
                 # Modulated exportation #
-                echo "<entry key=\"THREADS_MAX\">1</entry>" >> $2
+                echo "<entry key=\"THREADS_MAX\">$SRM_PLL_CONF</entry>" >> $2
 
             elif [[ $SRM_LINE == *"</properties>"* ]]; then
 
@@ -338,3 +338,5 @@
 
     fi
 
+    # Exit code #
+    exit $SRM_SIG_EXIT
