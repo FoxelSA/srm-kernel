@@ -1,6 +1,6 @@
 ## Changelog
 
-### Beta
+### Release 0.2 (August 7, 2015)
 
 - `Revised` : Modules information exportation
 - `Revised` : Modules code structure more uniform
