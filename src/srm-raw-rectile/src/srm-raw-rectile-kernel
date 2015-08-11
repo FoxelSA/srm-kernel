@@ -1,0 +1,259 @@
+#!/bin/bash
+# srm-kernel - Standard refinement modules
+#
+# Copyright (c) 2013-2015 FOXEL SA - http://foxel.ch
+# Please read <http://foxel.ch/license> for more information.
+#
+#
+# Author(s):
+#
+#       Nils Hamel <n.hamel@foxel.ch>
+#
+#
+# This file is part of the FOXEL project <http://foxel.ch>.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# Additional Terms:
+#
+#       You are required to preserve legal notices and author attributions in
+#       that material or in the Appropriate Legal Notices displayed by works
+#       containing it.
+#
+#       You are required to attribute the work as explained in the "Usage and
+#       Attribution" section of <http://foxel.ch/license>.
+
+    # Storage variables #
+    SRM_MNT_BASE="/data/"
+
+    # Execution variables #
+    SRM_KER_FORC="false"
+    SRM_KER_MODE="unknown"
+
+    # Temporary storage variables #
+    SRM_TMP_NAME=""
+
+    # Communication variables #
+    SRM_IO_PATH=""
+    SRM_IO_IPOS=""
+    SRM_IO_OPOS=""
+
+    # Parallel variables #
+    SRM_PLL_CONF="1"
+
+    # Signal variables #
+    SRM_SIG_EXIT=0
+
+# Argument and parameter
+#
+# This function reads the module script arguments and parameters using the
+# assuption that every argument always comes with a unique parameter.
+
+    function srm_arg() {
+
+        # Arguments and parameters #
+        while [[ $# > 0 ]]; do
+
+            # Read token and update head #
+            srm_arg="$1"; shift
+            srm_prm="$1"; shift
+
+            # Switch on arguments #
+            case $srm_arg in
+
+                --mount-point)
+                    SRM_MNT_BASE="$srm_prm"
+                ;;
+                --local-thread)
+                    SRM_PLL_CONF="$srm_prm"
+                ;;
+                --force)
+                    SRM_KER_FORC="$srm_prm"
+                ;;
+                --io)
+                    SRM_IO_PATH="$srm_prm"
+                ;;
+
+            esac
+
+        done
+
+    }
+
+# Message display
+#
+# The following function simply displays the string provdided as parameter using
+# the standard error output.
+
+    function srm_echo() {
+
+        # Display message #
+        >&2 echo "$1"
+        
+    }
+
+# Timestamps hashing
+#
+# This function returns the hashed (truncated) timestamps value for any given
+# timestamp according to the storage structure standards. It corresponds to a
+# simple division by ten.
+
+    function srm_tshash() {
+
+        # Retrieve unix timestamps #
+        SRM_TS_UNIX=(${1//_/ })
+
+        # Returns hashed timestmap #
+        echo $(( ${SRM_TS_UNIX[0]} / 100 ))
+
+    }
+
+# Temporary file system
+#
+# This function creates a temporary storage (tmpfs) in case module requires
+# fast-access storage. It also allows to delete the temporary storage as the
+# module ends its task.
+
+    function srm_tmpfs() {
+
+        # Create temporary storage path #
+        SRM_TMP_NAME=/run/shm/$(echo "$SRM_IO_PATH" | sha256sum | cut -c 1-32)
+
+        # Temporary storage management #
+        if [ "$1" == "create" ]; then
+
+            # Create temporary storage #
+            mkdir -p $SRM_TMP_NAME
+
+        elif [ "$1" == "delete" ]; then
+
+            # Check temporary storage #
+            if [ -d $SRM_TMP_NAME ]; then
+
+                # Delete temporary storage #
+                rm -rf $SRM_TMP_NAME
+
+            fi
+
+        fi
+
+    }
+
+# Module kernel function
+#
+# The following instructions are responsible of performing the tasks the module
+# is supposed to do and constitute the main kernel function. The kernel function
+# is broadcasted to the different available computers according to the specified
+# network topology.
+
+    # Arguments and parameters #
+    srm_arg $@
+
+    # Decompose IO buffer #
+    SRM_IO_PART=(${SRM_IO_PATH//,/ })
+
+    # Compose source and destination #
+    SRM_IO_IPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[0]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
+    SRM_IO_OPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
+
+    # Check source element #
+    if [ ! -d $SRM_IO_IPOS ]; then
+
+        # Display message #
+        srm_echo "SRM Kernel : Error, invalid module kernel io specification"
+
+        # Update exit code #
+        SRM_SIG_EXIT=1
+
+    else
+
+        # Check device #
+        if [[ ! $(cat $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | grep "type=") == *"=eyesis4pi" ]]; then
+
+            # Display message #
+            srm_echo "SRM Kernel : Error, unknown device type"
+
+            # Update exit code #
+            SRM_SIG_EXIT=1
+
+        else
+
+            # Display message #
+            srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
+
+            # Temporary storage #
+            srm_tmpfs create
+
+            # Check pose #
+            if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
+
+                # Remove previous data #
+                if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
+
+                # Create destination directory #
+                mkdir -p $SRM_IO_OPOS
+
+                # Retrieve number of modules #
+                SRM_EXE_MODS=$(grep "modules" $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | cut -d'=' -f2)
+
+                # Retrieve sensor resolution #
+                SRM_EXE_SNSW=$(grep "pixelCorrectionWidth_00"  $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | cut -d'=' -f2)
+                SRM_EXE_SNSH=$(grep "pixelCorrectionHeight_00" $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | cut -d'=' -f2)
+
+                # Retrieve number of modules #
+                for SRM_EXE_IDX in $(seq 1 $SRM_EXE_MODS); do
+
+                    SRM_EXE_NAME=$(basename $SRM_IO_IPOS)
+
+                    cp $SRM_IO_IPOS/${SRM_EXE_NAME}_$SRM_EXE_IDX.jp4 $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.jp4
+
+                    # Convert to dngfile #
+                    movie2dng --dng $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.jp4
+
+                    # Debayer image #
+                    dcraw $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.dng
+
+                    # Convert to tiff file #
+                    convert $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.ppm $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.tiff
+
+                    # Compute channels numbers #
+                    SRM_EXE_CHN1=$(printf '%02d' $(( $SRM_EXE_IDX -  1 )))
+                    SRM_EXE_CHN2=$(printf '%02d' $(( $SRM_EXE_IDX +  7 )))
+                    SRM_EXE_CHN3=$(printf '%02d' $(( $SRM_EXE_IDX + 15 )))
+
+                    # Compute crop offsets #
+                    SRM_EXE_CRP1=8
+                    SRM_EXE_CRP2=$(( ${SRM_EXE_SNSH} + 8 ))
+                    SRM_EXE_CRP3=$(( ${SRM_EXE_SNSH} * 2 + 16 ))
+
+                    # Extract sensors image #
+                    convert $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.tiff -crop ${SRM_EXE_SNSW}x${SRM_EXE_SNSH}+0+$SRM_EXE_CRP1 $SRM_IO_OPOS/${SRM_EXE_NAME}_$SRM_EXE_CHN1.tiff
+                    convert $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.tiff -crop ${SRM_EXE_SNSW}x${SRM_EXE_SNSH}+0+$SRM_EXE_CRP2 $SRM_IO_OPOS/${SRM_EXE_NAME}_$SRM_EXE_CHN2.tiff
+                    convert $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.tiff -crop ${SRM_EXE_SNSW}x${SRM_EXE_SNSH}+0+$SRM_EXE_CRP3 $SRM_IO_OPOS/${SRM_EXE_NAME}_$SRM_EXE_CHN3.tiff
+
+                done
+
+            fi
+
+            # Temporary storage #
+            srm_tmpfs delete
+
+        fi
+
+    fi
+
+    # Exit code #
+    exit $SRM_SIG_EXIT
+
