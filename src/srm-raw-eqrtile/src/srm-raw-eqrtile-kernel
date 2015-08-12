@@ -154,6 +154,20 @@
 
     }
 
+# Calibration data access
+#
+# This function allows to query calibration data through the standard storage
+# structure. It expects the device MAC address and the key of the desired value
+# and returns it when the key is found in the calibration data. An empty string
+# is return otherwise.
+
+    function srm_askc() {
+
+        # Read and returns value of key #
+        echo $(grep "$2" $SRM_MNT_BASE/camera/$1/fastcal/calibration.key | cut -d'=' -f2)
+
+    }
+
 # Module kernel specific function (elphel-plugin@elphel)
 #
 # This function implements the Elphel plugin call to perform refinement of the
