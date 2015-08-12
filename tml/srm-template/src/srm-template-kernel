@@ -178,6 +178,9 @@
     # Decompose IO buffer #
     SRM_IO_PART=(${SRM_IO_PATH//,/ })
 
+    # Compose pose identification #
+    SRM_IO_POSE=${SRM_IO_PART[5]}
+
     # Compose source and destination #
     SRM_IO_IPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[0]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
     SRM_IO_OPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}

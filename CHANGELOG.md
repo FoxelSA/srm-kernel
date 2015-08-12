@@ -1,5 +1,10 @@
 ## Changelog
 
+### Beta 0.3
+
+- `Added` : **srm-raw-rectile** raw to rectilinear tile module
+- `Added` : Calibration data access generic function
+
 ### Release 0.2 (August 7, 2015)
 
 - `Revised` : Modules information exportation
