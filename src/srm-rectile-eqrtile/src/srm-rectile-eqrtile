@@ -1,0 +1,452 @@
+#!/bin/bash
+# srm-kernel - Standard refinement modules
+#
+# Copyright (c) 2013-2015 FOXEL SA - http://foxel.ch
+# Please read <http://foxel.ch/license> for more information.
+#
+#
+# Author(s):
+#
+#       Nils Hamel <n.hamel@foxel.ch>
+#
+#
+# This file is part of the FOXEL project <http://foxel.ch>.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# Additional Terms:
+#
+#       You are required to preserve legal notices and author attributions in
+#       that material or in the Appropriate Legal Notices displayed by works
+#       containing it.
+#
+#       You are required to attribute the work as explained in the "Usage and
+#       Attribution" section of <http://foxel.ch/license>.
+
+    # Storage variables #
+    SRM_MNT_BASE="/data/"
+
+    # Command variables #
+    SRM_CMD_NORM="$(basename $0)"
+    SRM_CMD_HASH="$(basename $0)"
+
+    # Execution variables #
+    SRM_MOD_EXEC="default"
+    SRM_MOD_MMSR=""
+    SRM_MOD_IHAS=""
+    SRM_MOD_OHAS=""
+
+    # Statistic variables #
+    SRM_STA_POSE=0
+    SRM_STA_PROC=0
+
+    # Parallel variables #
+    SRM_PLL_POSE=""
+    SRM_PLL_CONF="1"
+
+    # Signal variables #
+    SRM_SIG_EXIT=0
+
+    # Classification variables #
+    SRM_IO_ICLASS="rectile"
+    SRM_IO_OCLASS="eqrtile"
+
+# Argument and parameter
+#
+# This function reads the module script arguments and parameters using the
+# assuption that every argument always comes with a unique parameter. Moreover
+# this function creates a normalized and a simplified representation of the
+# script command.
+#
+# The simplified representation of the command considers only parameters that
+# are specified using a simple '-' switch (e.g. '-a 1.0'). This simplified
+# command is then used to compute the module hash sum according to the standard
+# storage structure requirement.
+#
+# A consequence of the standard storage structure and the way module hash are
+# computed is that arguments considered in the simplified representation of the
+# command cannot consider default values.
+
+    function srm_arg() {
+
+        # Arguments and parameters #
+        while [[ $# > 0 ]]; do
+
+            # Read token and update head #
+            srm_arg="$1"; shift
+            srm_prm="$1"; shift
+
+            # Switch on arguments #
+            case $srm_arg in
+
+                --mount-point)
+                    SRM_MNT_BASE="$srm_prm"
+                ;;
+                --address)
+                    SRM_MOD_MMSR="$SRM_MOD_MMSR $srm_prm"
+                ;;
+                --display)
+                    SRM_MOD_EXEC="$srm_prm"
+                ;;
+                --thread)
+                    SRM_PLL_CONF="$srm_prm"
+                ;;
+                -n)
+                    SRM_MOD_IHAS="$srm_prm"
+                ;;
+
+            esac
+
+            # Compose normalized command #
+            SRM_CMD_NORM="$SRM_CMD_NORM $srm_arg $srm_prm"
+
+            # Filter arguments and parameters #
+            if [ "${srm_arg:1:1}" != "-" ]; then 
+
+                # Compose simplified command #
+                srm_insert $srm_arg $srm_prm
+
+            fi
+
+        done
+
+    }
+
+# Argument and parameter sorting
+#
+# This function is used to set the simplified command that is used to compute
+# the module hash sum. In addition, the order of the arguments and parameters
+# are provided must not change the hash sum.
+
+    function srm_insert() {
+
+        # Create token array #
+        SRM_INS_PART=($SRM_CMD_HASH)
+        SRM_INS_SIZE=${#SRM_INS_PART[@]}
+
+        # Initialize insertion #
+        SRM_CMD_HASH="${SRM_INS_PART[0]}"
+        SRM_INS_FLAG=0
+
+        # Reordered insertion #
+        for (( i = 1; i < ${SRM_INS_SIZE}; i = i + 2 )); do
+
+            # Sort check #
+            if (( $( printf "%d" "'${SRM_INS_PART[$i]:1:1}" ) > $( printf "%d" "'${1:1:1}" ) )) && (( $SRM_INS_FLAG == 0 )); then
+
+                # Insert argument and parameter #
+                SRM_CMD_HASH="$SRM_CMD_HASH $1 $2 ${SRM_INS_PART[$i]} ${SRM_INS_PART[$((i+1))]}";
+
+                # Update insertion flag #
+                SRM_INS_FLAG=1
+
+            else
+
+                # Insert argument and parameter #
+                SRM_CMD_HASH="$SRM_CMD_HASH ${SRM_INS_PART[$i]} ${SRM_INS_PART[$((i+1))]}"
+
+            fi
+
+        done
+
+        # Check insertion flag #
+        if (( $SRM_INS_FLAG == 0 )); then SRM_CMD_HASH="$SRM_CMD_HASH $1 $2"; fi
+
+    }
+
+# Message display
+#
+# The following function simply displays the string provdided as parameter using
+# the standard error output.
+
+    function srm_echo() {
+
+        # Display message #
+        >&2 echo "$1"
+        
+    }
+
+# Parallel configuration
+#
+# This function establish the configuration of module parallel processing. If
+# a network topology configuration file is provided, it is considered by GNU
+# parallel. Otherwise, the parameter is interpreted as the number of thread to
+# use on the local machine.
+
+    function srm_parallel() {
+
+        # Check for file #
+        if [ -e $SRM_PLL_CONF ]; then
+
+            # Compose parallel command #
+            echo "--sshconfig $SRM_PLL_CONF"
+
+        else
+
+            # Compose parallel command #
+            echo "-j$SRM_PLL_CONF"
+
+        fi
+
+    }
+
+# Timestamps selection
+#
+# This function detects if a given timestamps, provided by the considered pose,
+# is in the range of the provided mmsr address. In order to perform this check,
+# the function waits the pose timestamps and the two downer and upper timestamps
+# of the considered mmsr address to provide an answer.
+
+    function srm_selected() {
+
+        # Decompose pose timestamps #
+        SRM_TS_PART=(${1//_/ })
+        SRM_TS_UNIX=${SRM_TS_PART[0]}
+        SRM_TS_USEC=${SRM_TS_PART[1]}
+
+        # Decompose mmsr downer and upper timestamps #
+        SRM_ML_PART=(${2//_/ })
+        SRM_MH_PART=(${3//_/ })
+        SRM_ML_UNIX=${SRM_ML_PART[0]}
+        SRM_MH_UNIX=${SRM_MH_PART[0]}
+        SRM_ML_USEC=${SRM_ML_PART[1]}
+        SRM_MH_USEC=${SRM_MH_PART[1]}
+
+        # Initialize result #
+        SRM_RETURN=1
+
+        # Check downer boundary #
+        if (( $SRM_TS_UNIX < $SRM_ML_UNIX )); then
+
+            # Return result #
+            SRM_RETURN=0
+
+        fi
+
+        # Check downer boundary #
+        if (( $SRM_TS_UNIX == $SRM_ML_UNIX )); then
+
+            # Check decimale boundary #
+            if (( $SRM_TS_USEC < $SRM_ML_USEC )); then
+
+                # Return result #
+                SRM_RETURN=0
+
+            fi
+
+        fi
+
+        # Check upper boundary #
+        if (( $SRM_TS_UNIX > $SRM_MH_UNIX )); then
+
+            # Return result #
+            SRM_RETURN=0
+
+        fi
+
+        # Check upper boundary #
+        if (( $SRM_TS_UNIX == $SRM_MH_UNIX )); then
+
+            # Check decimale boundary #
+            if (( $SRM_TS_USEC > $SRM_ML_USEC )); then
+
+                # Return result #
+                SRM_RETURN=0
+
+            fi
+
+        fi
+
+        # Return result #
+        echo $SRM_RETURN
+
+    }
+
+# Node initialization #
+#
+# This function initialize the module node directories and files structure and
+# creates the information files. When the structure is already initialized, the
+# function only complete required information.
+
+    function srm_init() {
+
+        # Node directory #
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS
+
+        # Node structure #
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/data
+
+        # Node classification #
+        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/class-output
+        echo $SRM_IO_ICLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/class-input
+
+        # Node filiation #
+        echo $SRM_MOD_OHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/hash-output
+        echo $SRM_MOD_IHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/hash-input
+
+        # Node simplified commands #
+        echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command-hash
+
+        # Node normalized commands #
+        echo "$(date)|$USER@$HOSTNAME\$$SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command-history
+
+    }
+
+# Module main function
+#
+# The following instrucations constitute the module main function. The main
+# function is responsible of enumerating the poses that have to be considered
+# by the module kernel script which is responsible of the actual mmsr addresses
+# poses processing.
+#
+# The main function is also responsible of the management of errors and the 
+# signal send to the system.
+
+    # Arguments and parameters #
+    srm_arg $@
+
+    # Compute module hash #
+    SRM_MOD_OHAS=$(echo "$SRM_CMD_HASH" | sha256sum | cut -c 1-16)
+
+    # Switch on execution mode #
+    if [ "$SRM_MOD_EXEC" == "default" ]; then
+
+        # Check source node #
+        if [ ! -d $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/ ] || (( ${#SRM_MOD_IHAS} != 16 )); then
+
+            # Display message #
+            srm_echo "SRM Kernel : Error, unknown or invalid source node"; SRM_SIG_EXIT=1
+
+            # Update exit code #
+            SRM_SIG_EXIT=1
+
+        else
+
+            # Check source classification #
+            if [ "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/info/class-output)" != "$SRM_IO_ICLASS" ]; then
+
+                # Display message #
+                srm_echo "SRM Kernel : Error, invalid source classification"; SRM_SIG_EXIT=1
+
+                # Update exit code #
+                SRM_SIG_EXIT=1
+
+            else
+
+                # Node initialization #
+                srm_init
+
+                # Display module summary #
+                srm_echo "SRM Kernel : $(basename $0)"
+                srm_echo "    cmd : $SRM_CMD_NORM"
+                srm_echo "    sha : $SRM_CMD_HASH"
+                srm_echo "    ish : $SRM_MOD_IHAS"
+                srm_echo "    osh : $SRM_MOD_OHAS"
+
+                # Parse mmsr addresses #
+                for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
+
+                    # Display mmsr address #
+                    srm_echo "SRM Kernel : address $SRM_EXE_MSSR"
+
+                    # Decompose mmsr address #
+                    SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
+                    SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
+
+                    # Display mmsr address summary #
+                    srm_echo "    mac : ${SRM_ADD_MAIN[0]}"
+                    srm_echo "    mas : ${SRM_ADD_MAIN[1]}"
+                    srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
+                    srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
+
+                    # Display module porcessing #
+                    srm_echo "SRM Kernel : processing"
+
+                    # Parse mmrs address poses #
+                    for SRM_EXE_SRC in $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/**/*; do
+
+                        # Check for directorie  #
+                        if [ -d $SRM_EXE_SRC ]; then
+
+                            # Pose mmsr range detection #
+                            if (( $(srm_selected $(basename $SRM_EXE_SRC) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
+
+                                # Update parallel directive #
+                                SRM_PLL_POSE="$SRM_PLL_POSE $SRM_MOD_IHAS,$SRM_MOD_OHAS,${SRM_ADD_MAIN[0]},${SRM_ADD_MAIN[1]},${SRM_ADD_MAIN[2]},$(basename $SRM_EXE_SRC)"
+
+                            fi
+
+                        fi
+
+                    done
+
+                done
+
+                # Check parallel directive #
+                if [ -n "$SRM_PLL_POSE" ]; then
+
+                    # Kernel script call #
+                    parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
+
+                fi
+
+            fi
+
+        fi
+
+    elif [ "$SRM_MOD_EXEC" == "nodes" ]; then
+
+        # Display available source nodes #
+        for SRM_NOD_INPUT in $SRM_MNT_BASE/pose/*; do
+
+            # Check for directories #
+            if [ -e $SRM_NOD_INPUT/info/classification ] && [ "$(cat $SRM_NOD_INPUT/info/classification)" == "$SRM_IO_ICLASS" ]; then
+
+                # Display source node #
+                srm_echo "$(basename $SRM_NOD_INPUT)"
+
+            fi
+
+        done
+
+    elif [ "$SRM_MOD_EXEC" == "hash" ]; then
+
+        # Display module hash #
+        srm_echo "$SRM_MOD_OHAS"
+
+    elif [ "$SRM_MOD_EXEC" == "iclass" ]; then
+
+        # Display classification #
+        srm_echo "$SRM_IO_ICLASS"
+
+    elif [ "$SRM_MOD_EXEC" == "oclass" ]; then
+
+        # Display classification #
+        srm_echo "$SRM_IO_OCLASS"
+
+    else
+
+        # Display message #
+        srm_echo "SRM - Kernel : Error, invalid module mode"; SRM_SIG_EXIT=1
+
+        # Update exit code #
+        SRM_SIG_EXIT=1
+
+    fi
+
+    # Exit code #
+    exit $SRM_SIG_EXIT
+
