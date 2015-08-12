@@ -151,6 +151,79 @@
 
     }
 
+# Calibration data access
+#
+#
+
+    function srm_askc() {
+
+        # Read and returns value of key #
+        echo $(grep "$2" $SRM_MNT_BASE/camera/$1/fastcal/calibration.key | cut -d'=' -f2)
+
+    }
+
+# Channel symetry management #
+#
+#
+
+    #$1 module
+    #$2 mac
+    #$3 pose timestamps
+
+    function srm_channels_eyesis4pi() {
+
+        # Check module index #
+        if (( $1 == 9 )); then
+
+            # Create channels array #
+            SRM_LIST="24 25"
+
+        else
+
+            # Create channels array #
+            SRM_LIST="$(printf '%02d' $(($1-1))) $(printf '%02d' $(($1+7))) $(printf '%02d' $(($1+15)))"
+
+        fi
+
+        # Initialize loop index #
+        SRM_INDX=0
+
+        # Parsing channels array #
+        for SRM_CHAN in $SRM_LIST; do
+
+            # Reset convert configuration option #
+            SRM_FLIP=""
+
+            # Compute channel crop rectangle #
+            SRM_CRPW=$(srm_askc $2 "pixelCorrectionWidth_$SRM_CHAN" )
+            SRM_CRPH=$(srm_askc $2 "pixelCorrectionHeight_$SRM_CHAN")
+            SRM_CRPX=0
+            SRM_CRPY=$(( $SRM_INDX * ( ${SRM_CRPH} + 16 ) ))
+
+            # Crop channel rectangle #
+            convert $SRM_TMP_NAME/${3}_$1.tiff -crop ${SRM_CRPW}x${SRM_CRPH}+${SRM_CRPX}+${SRM_CRPY} $SRM_TMP_NAME/${3}_${SRM_CHAN}_channel.tiff &>/dev/null
+
+            # Remove EXIF information from channel image #
+            exiv2 rm $SRM_TMP_NAME/${3}_${SRM_CHAN}_channel.tiff &>/dev/null
+
+            # Compute channel symetries #
+            SRM_SYMH=$(srm_askc $2 "hflip_$SRM_CHAN")
+            SRM_SYMV=$(srm_askc $2 "vflip_$SRM_CHAN")
+
+            # Compose convert configuration variable #
+            if (( $SRM_SYMH == 1 )); then SRM_FLIP="$SRM_FLIP -flop"; fi
+            if (( $SRM_SYMV == 1 )); then SRM_FLIP="$SRM_FLIP -flip"; fi
+
+            # Apply channel symetries #
+            convert $SRM_FLIP $SRM_TMP_NAME/${3}_${SRM_CHAN}_channel.tiff $SRM_IO_OPOS/${3}_${SRM_CHAN}.tiff &>/dev/null
+
+            # Update loop index #
+            SRM_INDX=$(( $SRM_INDX + 1 ))
+
+        done
+
+    }
+
 # Module kernel function
 #
 # The following instructions are responsible of performing the tasks the module
@@ -163,6 +236,9 @@
 
     # Decompose IO buffer #
     SRM_IO_PART=(${SRM_IO_PATH//,/ })
+
+    # Compose pose identification #
+    SRM_IO_POSE=${SRM_IO_PART[5]}
 
     # Compose source and destination #
     SRM_IO_IPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[0]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
@@ -205,43 +281,26 @@
                 # Create destination directory #
                 mkdir -p $SRM_IO_OPOS
 
-                # Retrieve number of modules #
-                SRM_EXE_MODS=$(grep "modules" $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | cut -d'=' -f2)
-
-                # Retrieve sensor resolution #
-                SRM_EXE_SNSW=$(grep "pixelCorrectionWidth_00"  $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | cut -d'=' -f2)
-                SRM_EXE_SNSH=$(grep "pixelCorrectionHeight_00" $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | cut -d'=' -f2)
+                # Retrieve device calibration #
+                SRM_MODS=$(srm_askc ${SRM_IO_PART[2]} "modules")
 
                 # Retrieve number of modules #
-                for SRM_EXE_IDX in $(seq 1 $SRM_EXE_MODS); do
+                for SRM_IDX in $(seq 1 $SRM_MODS); do
 
-                    SRM_EXE_NAME=$(basename $SRM_IO_IPOS)
+                    # Move source file to temporary storage #
+                    cp -L $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_IDX.jp4 $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.jp4
 
-                    cp $SRM_IO_IPOS/${SRM_EXE_NAME}_$SRM_EXE_IDX.jp4 $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.jp4
+                    # Convert jp4 source file to adobe format #
+                    movie2dng --no-dng-rotation --dng $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.jp4 &>/dev/null
 
-                    # Convert to dngfile #
-                    movie2dng --dng $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.jp4
+                    # Apply debayer on source image #
+                    dcraw -q 3 -T $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.dng &>/dev/null
 
-                    # Debayer image #
-                    dcraw $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.dng
+                    # Remove EXIF information from module image #
+                    exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.tiff &>/dev/null
 
-                    # Convert to tiff file #
-                    convert $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.ppm $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.tiff
-
-                    # Compute channels numbers #
-                    SRM_EXE_CHN1=$(printf '%02d' $(( $SRM_EXE_IDX -  1 )))
-                    SRM_EXE_CHN2=$(printf '%02d' $(( $SRM_EXE_IDX +  7 )))
-                    SRM_EXE_CHN3=$(printf '%02d' $(( $SRM_EXE_IDX + 15 )))
-
-                    # Compute crop offsets #
-                    SRM_EXE_CRP1=8
-                    SRM_EXE_CRP2=$(( ${SRM_EXE_SNSH} + 8 ))
-                    SRM_EXE_CRP3=$(( ${SRM_EXE_SNSH} * 2 + 16 ))
-
-                    # Extract sensors image #
-                    convert $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.tiff -crop ${SRM_EXE_SNSW}x${SRM_EXE_SNSH}+0+$SRM_EXE_CRP1 $SRM_IO_OPOS/${SRM_EXE_NAME}_$SRM_EXE_CHN1.tiff
-                    convert $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.tiff -crop ${SRM_EXE_SNSW}x${SRM_EXE_SNSH}+0+$SRM_EXE_CRP2 $SRM_IO_OPOS/${SRM_EXE_NAME}_$SRM_EXE_CHN2.tiff
-                    convert $SRM_TMP_NAME/${SRM_EXE_NAME}_$SRM_EXE_IDX.tiff -crop ${SRM_EXE_SNSW}x${SRM_EXE_SNSH}+0+$SRM_EXE_CRP3 $SRM_IO_OPOS/${SRM_EXE_NAME}_$SRM_EXE_CHN3.tiff
+                    # Process channels #
+                    srm_channels_eyesis4pi $SRM_IDX ${SRM_IO_PART[2]} $SRM_IO_POSE
 
                 done
 
