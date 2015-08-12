@@ -153,7 +153,10 @@
 
 # Calibration data access
 #
-#
+# This function allows to query calibration data through the standard storage
+# structure. It expects the device MAC address and the key of the desired value
+# and returns it when the key is found in the calibration data. An empty string
+# is return otherwise.
 
     function srm_askc() {
 
@@ -162,13 +165,13 @@
 
     }
 
-# Channel symetry management #
+# Module kernel specific function (channel-extraction@eyesis4pi)
 #
-#
-
-    #$1 module
-    #$2 mac
-    #$3 pose timestamps
+# This function is responsible of the camera channels image extraction on the
+# basis of the composite raw image coming from camera modules. It expects the
+# module number (1-9), the camera MAC address and the pose identification. On
+# this basis it extract the channels image and apply the required symetries
+# according to the calibration data.
 
     function srm_channels_eyesis4pi() {
 
