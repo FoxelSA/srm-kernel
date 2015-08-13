@@ -202,18 +202,19 @@
             # Insert alpha channel #
             convert $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff $SRM_MNT_BASE/camera/$1/calibration/masks/mask-$SRM_TILE.tiff -compose copyopacity -composite $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff
 
-            tiffset -s 286 $(srm_askc $1 "XPosition_$SRM_TILE") $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff
-            tiffset -s 287 $(srm_askc $1 "YPosition_$SRM_TILE") $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff
-
             # Inject result in storage structure #
             rsync $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff $SRM_IO_OPOS/${SRM_IO_POSE}_$SRM_TILE.tiff
 
-            # Specific channel splitting #
-            if [ "$SRM_TILE" = "04" ] || [ "$SRM_TILE" == "12" ] || [ "$SRM_TILE" == "22" ]; then
+            # Retrieve panoramic and tile width #
+            SRM_PWIDTH=$(srm_askc $1 "ImageFullWidth_$SRM_TILE")
+            SRM_TWIDTH=$(srm_askc $1 "XPosition_$SRM_TILE")
+            SRM_HEIGHT=$(srm_askc $1 "YPosition_$SRM_TILE")
 
-                # Retrieve panoramic and tile width #
-                SRM_PWIDTH=$(srm_askc $1 "ImageFullWidth_$SRM_TILE")
-                SRM_TWIDTH=$(srm_askc $1 "equirectangularWidth_$SRM_TILE")
+            tiffset -s 286 $(echo "$SRM_TWIDTH/72" | bc -l) $SRM_IO_OPOS/${SRM_IO_POSE}_$SRM_TILE.tiff
+            tiffset -s 287 $(echo "$SRM_HEIGHT/72" | bc -l) $SRM_IO_OPOS/${SRM_IO_POSE}_$SRM_TILE.tiff
+
+            # Specific channel splitting #
+            if [ "$SRM_TILE" = "04" ] || [ "$SRM_TILE" == "12" ] || [ "$SRM_TILE" == "20" ]; then
 
                 # Compute split point #
                 SRM_SPLITX=$(( $SRM_PWIDTH - $SRM_TWIDTH ))
@@ -221,18 +222,18 @@
                 # Compute remaining width #
                 SRM_RWIDTH=$(( $SRM_TWIDTH - $SRM_SPLITX ))
 
-                convert $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff -crop ${SRM_SPLITX}x$(srm_askc $1 "equirectangularHeight_$SRM_TILE")+0+0 $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE_L.tiff
-                convert $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff -crop ${SRM_RWIDTH}x$(srm_askc $1 "equirectangularHeight_$SRM_TILE")+$(($SRM_SPLITX+1))+0 $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE_R.tiff
+                convert $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff -crop ${SRM_SPLITX}x$(srm_askc $1 "equirectangularHeight_$SRM_TILE")+0+0 $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_TILE}_L.tiff
+                convert $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff -crop ${SRM_RWIDTH}x$(srm_askc $1 "equirectangularHeight_$SRM_TILE")+$(($SRM_SPLITX+1))+0 $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_TILE}_R.tiff
 
-                tiffset -s 286 $(srm_askc $1 "XPosition_$SRM_TILE") $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE_L.tiff
-                tiffset -s 287 $(srm_askc $1 "YPosition_$SRM_TILE") $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE_L.tiff
+                tiffset -s 286 $(echo "$SRM_TWIDTH/72" | bc -l) $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_TILE}_L.tiff
+                tiffset -s 287 $(echo "$SRM_HEIGHT/72" | bc -l) $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_TILE}_L.tiff
 
-                tiffset -s 286 $(srm_askc $1 "XPosition_$SRM_TILE") $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE_R.tiff
-                tiffset -s 287 $(srm_askc $1 "YPosition_$SRM_TILE") $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE_R.tiff
+                tiffset -s 286 0.0 $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_TILE}_R.tiff
+                tiffset -s 287 $(echo "$SRM_HEIGHT/72" | bc -l) $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_TILE}_R.tiff
 
                 # Inject results in storage structure #
-                rsynch $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE_L.tiff $SRM_IO_OPOS/${SRM_IO_POSE}_$SRM_TILE_L.tiff
-                rsynch $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE_R.tiff $SRM_IO_OPOS/${SRM_IO_POSE}_$SRM_TILE_R.tiff
+                rsync $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_TILE}_L.tiff $SRM_IO_OPOS/${SRM_IO_POSE}_${SRM_TILE}_L.tiff
+                rsync $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_TILE}_R.tiff $SRM_IO_OPOS/${SRM_IO_POSE}_${SRM_TILE}_R.tiff
 
             fi
 
