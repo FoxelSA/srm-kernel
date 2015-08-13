@@ -248,7 +248,7 @@
         if [ "$SRM_KER_MODE" == "enblend" ]; then
 
             # Check device type #
-            if [[ $(cat $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | grep "type=") == *"=eyesis4pi" ]]; then
+            if [ "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
 
                 # Check pose state #
                 if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
