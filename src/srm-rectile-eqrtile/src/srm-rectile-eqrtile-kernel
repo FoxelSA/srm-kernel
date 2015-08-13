@@ -167,7 +167,11 @@
 
 # Module kernel specific function (norama@eyesis4pi)
 #
-#
+# This function computes the equirectangular projection of the sensors image
+# coming from Elphel Eyesis4pi camera devices. In addition, it splits the
+# boundary equirectangular projections for panoramic stitching purpose. In the
+# same direction, the position of the equirectangular projections in the whole 
+# panoramic mapping is also injected in each TIFF image tags.
 
     function srm_norama_eyesis4pi() {
 
