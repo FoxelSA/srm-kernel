@@ -202,7 +202,7 @@
         srm_echo "    rawdata ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
         # Check device constructor #
-        if [ ! "$(srm_askc ${SRM_IO_PART[2]} "constructor")" == "elphel" ]; then
+        if [ "$(srm_askc ${SRM_IO_PART[2]} "constructor")" == "elphel" ]; then
 
             # Check pose state #
             if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then

@@ -320,7 +320,7 @@
         if [ "$SRM_KER_MODE" == "elphel-plugin" ]; then
 
             # Check device constructor #
-            if [[ $(cat $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | grep "constructor=") == *"=elphel" ]]; then
+            if [ "$(srm_askc ${SRM_IO_PART[2]} "constructor")" == "elphel" ]; then
 
                 # Check pose state #
                 if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
