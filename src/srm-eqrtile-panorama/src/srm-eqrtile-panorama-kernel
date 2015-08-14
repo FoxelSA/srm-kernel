@@ -154,6 +154,20 @@
 
     }
 
+# Calibration data access
+#
+# This function allows to query calibration data through the standard storage
+# structure. It expects the device MAC address and the key of the desired value
+# and returns it when the key is found in the calibration data. An empty string
+# is return otherwise.
+
+    function srm_askc() {
+
+        # Read and returns value of key #
+        echo $(grep "$2" $SRM_MNT_BASE/camera/$1/fastcal/calibration.key | cut -d'=' -f2)
+
+    }
+
 # Module kernel specific function (enblend@eyesis4pi)
 #
 # This function implements the enblend stitching procedure using source data
@@ -207,6 +221,9 @@
         $SRM_TMP_NAME/tmp_top_band.tiff \
         $SRM_TMP_NAME/tmp_mid_band.tiff \
         $SRM_TMP_NAME/tmp_bot_band.tiff &> /dev/null
+
+        # Inject results in storage structure #
+        rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $2/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff
 
     }
 

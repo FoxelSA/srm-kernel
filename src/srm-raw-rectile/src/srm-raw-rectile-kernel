@@ -218,7 +218,10 @@
             if (( $SRM_SYMV == 1 )); then SRM_FLIP="$SRM_FLIP -flip"; fi
 
             # Apply channel symetries #
-            convert $SRM_FLIP $SRM_TMP_NAME/${3}_${SRM_CHAN}_channel.tiff $SRM_IO_OPOS/${3}_${SRM_CHAN}.tiff &>/dev/null
+            convert $SRM_FLIP $SRM_TMP_NAME/${3}_${SRM_CHAN}_channel.tiff $SRM_TMP_NAME/${3}_${SRM_CHAN}.tiff &>/dev/null
+
+            # Inject result in storage structure #
+            rsync $SRM_TMP_NAME/${3}_${SRM_CHAN}.tiff $SRM_IO_OPOS/${3}_${SRM_CHAN}.tiff
 
             # Update loop index #
             SRM_INDX=$(( $SRM_INDX + 1 ))

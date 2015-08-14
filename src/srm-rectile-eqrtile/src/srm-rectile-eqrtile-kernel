@@ -292,13 +292,13 @@
         srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
         # Check device type #
-        if [ ! "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
-
-            # Temporary storage #
-            srm_tmpfs create
+        if [ "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
 
             # Check pose #
             if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
+
+                # Temporary storage #
+                srm_tmpfs create
 
                 # Remove previous data #
                 if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
@@ -309,10 +309,10 @@
                 # Refinement process #
                 srm_norama_eyesis4pi ${SRM_IO_PART[2]}
 
-            fi
+                # Temporary storage #
+                srm_tmpfs delete
 
-            # Temporary storage #
-            srm_tmpfs delete
+            fi
 
         else
 
