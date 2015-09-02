@@ -176,12 +176,15 @@
 
     function srm_enblend_eysis4pi() {
 
+        # Local thread configuration #
+        export OMP_NUM_THREADS=$SRM_PLL_CONF
+
         # Extract timestamps #
         SRM_EXE_TIME=$(basename $1); 
         SRM_EXE_TIME=(${SRM_EXE_TIME//_/ })
 
         # Stitching of upper band #
-        enblend --wrap='horizontal' -o $SRM_TMP_NAME/tmp_top_band.tiff \
+        enblend-mp --wrap='horizontal' -o $SRM_TMP_NAME/tmp_top_band.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_R.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_05.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_06.tiff \
@@ -193,7 +196,7 @@
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_L.tiff &> /dev/null
 
         # Stitching of middle band #
-        enblend --wrap='horizontal' -o $SRM_TMP_NAME/tmp_mid_band.tiff \
+        enblend-mp --wrap='horizontal' -o $SRM_TMP_NAME/tmp_mid_band.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_R.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_13.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_14.tiff \
@@ -205,7 +208,7 @@
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_L.tiff &> /dev/null
 
         # Stitching of bottom band #
-        enblend --wrap='horizontal' -o $SRM_TMP_NAME/tmp_bot_band.tiff \
+        enblend-mp --wrap='horizontal' -o $SRM_TMP_NAME/tmp_bot_band.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_R.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_21.tiff \
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_22.tiff \
@@ -217,13 +220,13 @@
         $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_L.tiff &> /dev/null
 
         # Stitching horizontal bands #
-        enblend --wrap='vertical' -o $2/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff \
+        enblend-mp --wrap='vertical' -o $2/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff \
         $SRM_TMP_NAME/tmp_top_band.tiff \
         $SRM_TMP_NAME/tmp_mid_band.tiff \
         $SRM_TMP_NAME/tmp_bot_band.tiff &> /dev/null
 
         # Inject results in storage structure #
-        rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $2/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff
+        rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $2/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff &> /dev/null
 
     }
 
