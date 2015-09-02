@@ -196,25 +196,17 @@
 
     else
 
-        # Check device #
-        if [[ ! $(cat $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/fastcal/calibration.key | grep "type=") == *"=eyesis4pi" ]]; then
-
-            # Display message #
-            srm_echo "SRM Kernel : Error, unknown device type"
-
-            # Update exit code #
-            SRM_SIG_EXIT=1
-
-        else
+        # Check device type #
+        if [ "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
 
             # Display message #
             srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
-            # Temporary storage #
-            srm_tmpfs create
-
             # Check pose #
             if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
+
+                # Temporary storage #
+                srm_tmpfs create
 
                 # Remove previous data #
                 if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
@@ -225,10 +217,18 @@
                 # Refinement process #
                 # ... #
 
+                # Temporary storage #
+                srm_tmpfs delete
+
             fi
 
-            # Temporary storage #
-            srm_tmpfs delete
+        else
+
+            # Display message #
+            srm_echo "SRM Kernel : Error, unknown device type"
+
+            # Update exit code #
+            SRM_SIG_EXIT=1
 
         fi
 
