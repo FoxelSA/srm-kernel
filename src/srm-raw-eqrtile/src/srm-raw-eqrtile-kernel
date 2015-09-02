@@ -280,6 +280,30 @@
 
         done
 
+        # Parsing result images #
+        for SRM_EXE_FILE in $5/*.tiff; do
+
+            # Extract file basename #
+            SRM_EXE_BASE=$(basename $SRM_EXE_FILE)
+
+            # Decompose basename #
+            SRM_EXE_ELEM=(${SRM_EXE_BASE//_/ })            
+
+            # Search for split images #
+            if [[ $SRM_EXE_BASE == *"_L"* ]]; then
+
+                # Search for second image part #
+                if [ -f $5/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_R.tiff ]; then
+
+                    # Rebuild whole image #
+                    convert +append $5/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_L.tiff $5/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_R.tiff $5/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}.tiff
+
+                fi
+
+            fi
+
+        done
+
     }
 
 # Module kernel function

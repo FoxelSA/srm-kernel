@@ -2,6 +2,7 @@
 
 ### Beta 0.3
 
+- `Added` : Local parallel processing management
 - `Added` : **srm-rectile-eqrtile** rectilinear to equirectangular tile
 - `Added` : **srm-raw-rectile** raw tile to rectilinear tile module
 - `Added` : Calibration data access generic function
