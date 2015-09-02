@@ -206,7 +206,7 @@
             elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.resultsDirectory"* ]]; then
 
                 # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.resultsDirectory\">$5</entry>" >> $2
+                echo "<entry key=\"CORRECTION_PARAMETERS.resultsDirectory\">$SRM_TMP_NAME</entry>" >> $2
 
             elif [[ $SRM_LINE == *"THREADS_MAX"* ]]; then
 
@@ -248,7 +248,7 @@
         ImageJ-linux64 --headless --mem 7150m --run Eyesis_Correction prefs=$2 &> /dev/null
 
         # Parsing result image #
-        for SRM_EXE_FILE in $5/*.tiff; do
+        for SRM_EXE_FILE in $SRM_TMP_NAME/*.tiff; do
 
             # Extract file basename #
             SRM_EXE_BASE=$(basename $SRM_EXE_FILE)
@@ -273,7 +273,7 @@
             fi
 
             # Adding extension to recomposed basename #
-            SRM_EXE_NAME=$5/$SRM_EXE_NAME.tiff
+            SRM_EXE_NAME=$SRM_TMP_NAME/$SRM_EXE_NAME.tiff
 
             # Rename result file #
             mv $SRM_EXE_FILE $SRM_EXE_NAME
@@ -281,7 +281,7 @@
         done
 
         # Parsing result images #
-        for SRM_EXE_FILE in $5/*.tiff; do
+        for SRM_EXE_FILE in $SRM_TMP_NAME/*.tiff; do
 
             # Extract file basename #
             SRM_EXE_BASE=$(basename $SRM_EXE_FILE)
@@ -293,16 +293,19 @@
             if [[ $SRM_EXE_BASE == *"_L"* ]]; then
 
                 # Search for second image part #
-                if [ -f $5/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_R.tiff ]; then
+                if [ -f $SRM_TMP_NAME/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_R.tiff ]; then
 
                     # Rebuild whole image #
-                    convert +append $5/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_L.tiff $5/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_R.tiff $5/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}.tiff
+                    convert +append $SRM_TMP_NAME/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_L.tiff $SRM_TMP_NAME/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_R.tiff $SRM_TMP_NAME/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}.tiff &> /dev/null
 
                 fi
 
             fi
 
         done
+
+        # Inject results in storage structure #
+        rsync $SRM_TMP_NAME/*.tiff $5/
 
     }
 
