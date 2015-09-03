@@ -293,7 +293,7 @@
             if [[ $SRM_EXE_BASE == *"_L"* ]]; then
 
                 # Search for second image part #
-                if [ -f $SRM_TMP_NAME/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_R.tiff ]; then
+                if [ -f $SRM_TMP_NAME/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_${SRM_EXE_ELEM[2]}_R.tiff ]; then
 
                     # Rebuild whole image #
                     convert +append $SRM_TMP_NAME/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_L.tiff $SRM_TMP_NAME/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}_R.tiff $SRM_TMP_NAME/${SRM_EXE_ELEM[0]}_${SRM_EXE_ELEM[1]}.tiff &> /dev/null
