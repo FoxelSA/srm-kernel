@@ -200,7 +200,7 @@
             # Compute inverted gnomonic projection #
             norama-invert -E -i $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_TILE.tiff -o $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff \
             --interpolation bicubicf \
-            --threads    1 \
+            --threads    $SRM_PLL_CONF \
             --eqr-width  $SRM_WTIL \
             --eqr-height $SRM_HTIL \
             --map-width  $SRM_WMAP \
