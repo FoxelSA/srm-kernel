@@ -85,6 +85,9 @@
                 --io)
                     SRM_IO_PATH="$srm_prm"
                 ;;
+                -m)
+                    SRM_KER_MODE="$srm_prm"
+                ;;
 
             esac
 
@@ -264,53 +267,66 @@
         # Display message #
         srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
-        # Check device type #
-        if [ "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
+        # Check module mode #
+        if [ "$SRM_KER_MODE" == "dcraw" ]; then
 
-            # Check pose #
-            if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
+            # Check device type #
+            if [ "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
 
-                # Temporary storage #
-                srm_tmpfs create
+                # Check pose #
+                if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
-                # Remove previous data #
-                if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
+                    # Temporary storage #
+                    srm_tmpfs create
 
-                # Create destination directory #
-                mkdir -p $SRM_IO_OPOS
+                    # Remove previous data #
+                    if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
 
-                # Retrieve device calibration #
-                SRM_MODS=$(srm_askc ${SRM_IO_PART[2]} "modules")
+                    # Create destination directory #
+                    mkdir -p $SRM_IO_OPOS
 
-                # Retrieve number of modules #
-                for SRM_IDX in $(seq 1 $SRM_MODS); do
+                    # Retrieve device calibration #
+                    SRM_MODS=$(srm_askc ${SRM_IO_PART[2]} "modules")
 
-                    # Move source file to temporary storage #
-                    cp -L $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_IDX.jp4 $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.jp4
+                    # Retrieve number of modules #
+                    for SRM_IDX in $(seq 1 $SRM_MODS); do
 
-                    # Convert jp4 source file to adobe format #
-                    movie2dng --no-dng-rotation --dng $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.jp4 &>/dev/null
+                        # Move source file to temporary storage #
+                        cp -L $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_IDX.jp4 $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.jp4
 
-                    # Apply debayer on source image #
-                    dcraw -q 3 -T $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.dng &>/dev/null
+                        # Convert jp4 source file to adobe format #
+                        movie2dng --no-dng-rotation --dng $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.jp4 &>/dev/null
 
-                    # Remove EXIF information from module image #
-                    exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.tiff &>/dev/null
+                        # Apply debayer on source image #
+                        dcraw -q 3 -T $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.dng &>/dev/null
 
-                    # Process channels #
-                    srm_channels_eyesis4pi $SRM_IDX ${SRM_IO_PART[2]} $SRM_IO_POSE
+                        # Remove EXIF information from module image #
+                        exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.tiff &>/dev/null
 
-                done
+                        # Process channels #
+                        srm_channels_eyesis4pi $SRM_IDX ${SRM_IO_PART[2]} $SRM_IO_POSE
 
-                # Temporary storage #
-                srm_tmpfs delete
+                    done
+
+                    # Temporary storage #
+                    srm_tmpfs delete
+
+                fi
+
+            else
+
+                # Display message #
+                srm_echo "SRM Kernel : Error, unknown device type"
+
+                # Update exit code #
+                SRM_SIG_EXIT=1
 
             fi
 
         else
 
             # Display message #
-            srm_echo "SRM Kernel : Error, unknown device type"
+            srm_echo "SRM Kernel : Error, unknown module mode"
 
             # Update exit code #
             SRM_SIG_EXIT=1
