@@ -85,6 +85,9 @@
                 --io)
                     SRM_IO_PATH="$srm_prm"
                 ;;
+                -m)
+                    SRM_KER_MODE="$srm_prm"
+                ;;
 
             esac
 
@@ -291,33 +294,46 @@
         # Display message #
         srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
 
-        # Check device type #
-        if [ "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
+        # Check module mode #
+        if [ "$SRM_KER_MODE" == "norama-suite" ]; then
 
-            # Check pose #
-            if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
+            # Check device type #
+            if [ "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
 
-                # Temporary storage #
-                srm_tmpfs create
+                # Check pose #
+                if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
-                # Remove previous data #
-                if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
+                    # Temporary storage #
+                    srm_tmpfs create
 
-                # Create destination directory #
-                mkdir -p $SRM_IO_OPOS
+                    # Remove previous data #
+                    if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
 
-                # Refinement process #
-                srm_norama_eyesis4pi ${SRM_IO_PART[2]}
+                    # Create destination directory #
+                    mkdir -p $SRM_IO_OPOS
 
-                # Temporary storage #
-                srm_tmpfs delete
+                    # Refinement process #
+                    srm_norama_eyesis4pi ${SRM_IO_PART[2]}
+
+                    # Temporary storage #
+                    srm_tmpfs delete
+
+                fi
+
+            else
+
+                # Display message #
+                srm_echo "SRM Kernel : Error, unknown device type"
+
+                # Update exit code #
+                SRM_SIG_EXIT=1
 
             fi
 
         else
 
             # Display message #
-            srm_echo "SRM Kernel : Error, unknown device type"
+            srm_echo "SRM Kernel : Error, unknown module mode"
 
             # Update exit code #
             SRM_SIG_EXIT=1
