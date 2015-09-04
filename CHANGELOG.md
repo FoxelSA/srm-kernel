@@ -1,6 +1,6 @@
 ## Changelog
 
-### Beta 0.3
+### Release 0.3 (September 4, 2015)
 
 - `Added` : Local parallel processing management
 - `Added` : **srm-rectile-eqrtile** rectilinear to equirectangular tile
