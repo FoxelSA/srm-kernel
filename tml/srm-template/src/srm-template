@@ -213,16 +213,16 @@
 
         # Decompose pose timestamps #
         SRM_TS_PART=(${1//_/ })
-        SRM_TS_UNIX=$((10#${SRM_TS_PART[0]})
-        SRM_TS_USEC=$((10#${SRM_TS_PART[1]})
+        SRM_TS_UNIX=$((10#${SRM_TS_PART[0]}))
+        SRM_TS_USEC=$((10#${SRM_TS_PART[1]}))
 
         # Decompose mmsr downer and upper timestamps #
         SRM_ML_PART=(${2//_/ })
         SRM_MH_PART=(${3//_/ })
-        SRM_ML_UNIX=$((10#${SRM_ML_PART[0]})
-        SRM_MH_UNIX=$((10#${SRM_MH_PART[0]})
-        SRM_ML_USEC=$((10#${SRM_ML_PART[1]})
-        SRM_MH_USEC=$((10#${SRM_MH_PART[1]})
+        SRM_ML_UNIX=$((10#${SRM_ML_PART[0]}))
+        SRM_MH_UNIX=$((10#${SRM_MH_PART[0]}))
+        SRM_ML_USEC=$((10#${SRM_ML_PART[1]}))
+        SRM_MH_USEC=$((10#${SRM_MH_PART[1]}))
 
         # Initialize result #
         SRM_RETURN=1
