@@ -172,7 +172,7 @@
 # Message display
 #
 # The following function simply displays the string provdided as parameter using
-# the standard error output.
+# the standard error as output.
 
     function srm_echo() {
 
