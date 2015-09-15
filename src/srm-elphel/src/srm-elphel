@@ -73,7 +73,7 @@
 #
 # A consequence of the standard storage structure and the way module hash are
 # computed is that arguments considered in the simplified representation of the
-# command cannot consider default values.
+# command cannot come with default values.
 
     function srm_arg() {
 
@@ -120,8 +120,9 @@
 # Argument and parameter sorting
 #
 # This function is used to set the simplified command that is used to compute
-# the module hash sum. In addition, the order of the arguments and parameters
-# are provided must not change the hash sum.
+# the module hash sum. Taking into account that the order of the provided
+# arguments and parameters is transparent to hash computation, this function
+# sorts the arguments and parameters on the basis of the arguments.
 
     function srm_insert() {
 
