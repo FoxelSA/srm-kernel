@@ -327,22 +327,16 @@
         # Check source node #
         if [ ! -d $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/ ] || (( ${#SRM_MOD_IHAS} != 16 )); then
 
-            # Display message #
-            srm_echo "SRM Kernel : Error, unknown or invalid source node"; SRM_SIG_EXIT=1
-
-            # Update exit code #
-            SRM_SIG_EXIT=1
+            # Display message and update exit code #
+            srm_echo "SRM Kernel : Error, unknown or invalid source node"; SRM_SIG_EXIT=1           
 
         else
 
             # Check source classification #
             if [ "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/info/class-output)" != "$SRM_IO_ICLASS" ]; then
 
-                # Display message #
+                # Display message and update exit code #
                 srm_echo "SRM Kernel : Error, invalid source classification"; SRM_SIG_EXIT=1
-
-                # Update exit code #
-                SRM_SIG_EXIT=1
 
             else
 
@@ -355,28 +349,20 @@
                 srm_echo "    sha : $SRM_CMD_HASH"
                 srm_echo "    ish : $SRM_MOD_IHAS"
                 srm_echo "    osh : $SRM_MOD_OHAS"
+                srm_echo "SRM Kernel : analysing addresses"
 
-                # Parse mmsr addresses #
-                for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
+                # Parse mmrs address #
+                for SRM_EXE_SRC in $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/**/*; do
 
-                    # Display mmsr address #
-                    srm_echo "SRM Kernel : address $SRM_EXE_MSSR"
+                    # Parse mmsr addresses #
+                    for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
 
-                    # Decompose mmsr address #
-                    SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
-                    SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
+                        # Display mmsr address #
+                        srm_echo "    analysing $SRM_EXE_MSSR address"
 
-                    # Display mmsr address summary #
-                    srm_echo "    mac : ${SRM_ADD_MAIN[0]}"
-                    srm_echo "    mas : ${SRM_ADD_MAIN[1]}"
-                    srm_echo "    seg : ${SRM_ADD_MAIN[2]}"
-                    srm_echo "    ran : ${SRM_ADD_POSE[0]} to ${SRM_ADD_POSE[1]}"
-
-                    # Display module porcessing #
-                    srm_echo "SRM Kernel : processing"
-
-                    # Parse mmrs address poses #
-                    for SRM_EXE_SRC in $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/**/*; do
+                        # Decompose mmsr address #
+                        SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
+                        SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
 
                         # Check for directory #
                         if [ -d $SRM_EXE_SRC ]; then
@@ -398,8 +384,16 @@
                 # Check parallel directive #
                 if [ -n "$SRM_PLL_POSE" ]; then
 
+                    # Display module processing #
+                    srm_echo "SRM Kernel : poses processing"
+
                     # Kernel script call #
                     parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
+
+                else
+
+                    # Display module processing #
+                    srm_echo "SRM Kernel : poses missing in addresses"
 
                 fi
 
