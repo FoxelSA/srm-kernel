@@ -48,10 +48,6 @@
     SRM_MOD_IHAS=""
     SRM_MOD_OHAS=""
 
-    # Statistic variables #
-    SRM_STA_POSE=0
-    SRM_STA_PROC=0
-
     # Parallel variables #
     SRM_PLL_POSE=""
     SRM_PLL_CONF="1"
