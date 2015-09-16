@@ -1,5 +1,10 @@
 ## Changelog
 
+### Beta 0.3.1
+
+- `Fixed` : Result synchronization in **srm-eqrtile-panorama**
+- `Fixed` : Octal misinterpretation of timestamps
+
 ### Release 0.3 (September 4, 2015)
 
 - `Added` : Local parallel processing management
