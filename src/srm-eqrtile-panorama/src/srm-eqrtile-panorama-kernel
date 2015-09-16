@@ -180,53 +180,53 @@
         export OMP_NUM_THREADS=$SRM_PLL_CONF
 
         # Extract timestamps #
-        SRM_EXE_TIME=$(basename $1); 
+        SRM_EXE_TIME=$(basename $SRM_IO_IPOS); 
         SRM_EXE_TIME=(${SRM_EXE_TIME//_/ })
 
         # Stitching of upper band #
         enblend-mp --wrap='horizontal' -o $SRM_TMP_NAME/tmp_top_band.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_R.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_05.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_06.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_07.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_00.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_01.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_02.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_03.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_L.tiff &> /dev/null
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_R.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_05.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_06.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_07.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_00.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_01.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_02.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_03.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_L.tiff &> /dev/null
 
         # Stitching of middle band #
         enblend-mp --wrap='horizontal' -o $SRM_TMP_NAME/tmp_mid_band.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_R.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_13.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_14.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_15.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_08.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_09.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_10.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_11.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_L.tiff &> /dev/null
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_R.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_13.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_14.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_15.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_08.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_09.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_10.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_11.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_L.tiff &> /dev/null
 
         # Stitching of bottom band #
         enblend-mp --wrap='horizontal' -o $SRM_TMP_NAME/tmp_bot_band.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_R.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_21.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_22.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_23.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_16.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_17.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_18.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_19.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_L.tiff &> /dev/null
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_R.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_21.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_22.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_23.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_16.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_17.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_18.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_19.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_L.tiff &> /dev/null
 
         # Stitching horizontal bands #
-        enblend-mp --wrap='vertical' -o $2/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff \
+        enblend-mp --wrap='vertical' -o $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff \
         $SRM_TMP_NAME/tmp_top_band.tiff \
         $SRM_TMP_NAME/tmp_mid_band.tiff \
         $SRM_TMP_NAME/tmp_bot_band.tiff &> /dev/null
 
         # Inject results in storage structure #
-        rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $2/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff &> /dev/null
+        rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $SRM_IO_OPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff
 
     }
 
@@ -280,7 +280,7 @@
                     mkdir -p $SRM_IO_OPOS
 
                     # Refinement process #
-                    srm_enblend_eysis4pi $SRM_IO_IPOS $SRM_IO_OPOS
+                    srm_enblend_eysis4pi
 
                     # Temporary storage #
                     srm_tmpfs delete
