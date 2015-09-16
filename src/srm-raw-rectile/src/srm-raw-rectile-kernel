@@ -210,12 +210,12 @@
 
                 # Compute channel image rectangle #
                 SRM_CHN_CRPW=$(srm_askc ${SRM_IO_PART[2]} "pixelCorrectionWidth_$SRM_IDX_CHAN" )
-                SRM_CHN_CRPW=$(srm_askc ${SRM_IO_PART[2]} "pixelCorrectionHeight_$SRM_IDX_CHAN")
+                SRM_CHN_CRPH=$(srm_askc ${SRM_IO_PART[2]} "pixelCorrectionHeight_$SRM_IDX_CHAN")
                 SRM_CHN_CRPX=0
-                SRM_CHN_CRPY=$(( $SRM_CHN_INDX * ( ${SRM_CHN_CRPW} + 16 ) ))
+                SRM_CHN_CRPY=$(( $SRM_CHN_INDX * ( ${SRM_CHN_CRPH} + 16 ) ))
 
                 # Extract channel image rectangle #
-                convert $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_MODE}.tiff -crop ${SRM_CHN_CRPW}x${SRM_CHN_CRPW}+${SRM_CHN_CRPX}+${SRM_CHN_CRPY} $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}_channel.tiff &>/dev/null
+                convert $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_MODE}.tiff -crop ${SRM_CHN_CRPW}x${SRM_CHN_CRPH}+${SRM_CHN_CRPX}+${SRM_CHN_CRPY} $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}_channel.tiff &>/dev/null
 
                 # Remove EXIF information from channel image #
                 exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}_channel.tiff &>/dev/null
