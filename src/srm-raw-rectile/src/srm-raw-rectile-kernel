@@ -98,7 +98,7 @@
 # Message display
 #
 # The following function simply displays the string provdided as parameter using
-# the standard error output.
+# the standard error as output.
 
     function srm_echo() {
 
@@ -118,7 +118,7 @@
         # Retrieve unix timestamps #
         SRM_TS_UNIX=(${1//_/ })
 
-        # Returns hashed timestmap #
+        # Returns hashed timestamps #
         echo $(( ${SRM_TS_UNIX[0]} / 100 ))
 
     }
@@ -163,7 +163,7 @@
 
     function srm_askc() {
 
-        # Read and returns value of key #
+        # Reads and returns value of key #
         echo $(grep "$2" $SRM_MNT_BASE/camera/$1/fastcal/calibration.key | cut -d'=' -f2)
 
     }
@@ -171,63 +171,72 @@
 # Module kernel specific function (channel-extraction@eyesis4pi)
 #
 # This function is responsible of the camera channels image extraction on the
-# basis of the composite raw image coming from camera modules. It expects the
-# module number (1-9), the camera MAC address and the pose identification. On
-# this basis it extract the channels image and apply the required symetries
-# according to the calibration data.
+# basis of the composite raw image coming from camera modules. Channel images
+# are extracted from module images on the basis of the calibration data and
+# symetries are applied to retrieve the original channel images.
 
-    function srm_channels_eyesis4pi() {
+    function srm_dcraw_eyesis4pi() {
 
-        # Check module index #
-        if (( $1 == 9 )); then
+        # Parsing device modules #
+        for SRM_IDX_MODE in $(seq 1 $(srm_askc ${SRM_IO_PART[2]} "modules")); do
 
-            # Create channels array #
-            SRM_LIST="24 25"
+            # Copy source file to temporary storage #
+            cp -L $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_IDX_MODE.jp4 $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MODE.jp4
 
-        else
+            # Convert jp4 source file to adobe format #
+            movie2dng --no-dng-rotation --dng $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MODE.jp4 &>/dev/null
 
-            # Create channels array #
-            SRM_LIST="$(printf '%02d' $(($1-1))) $(printf '%02d' $(($1+7))) $(printf '%02d' $(($1+15)))"
+            # Debayer source image #
+            dcraw -q 3 -T $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MODE.dng &>/dev/null
 
-        fi
+            # Remove EXIF information from module image #
+            exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MODE.tiff &>/dev/null
 
-        # Initialize loop index #
-        SRM_INDX=0
+            # Convert module index to channles list #
+            if (( $SRM_IDX_MODE == 9 )); then
 
-        # Parsing channels array #
-        for SRM_CHAN in $SRM_LIST; do
+                # Compose module channels array #
+                SRM_CHN_LIST="24 25"
 
-            # Reset convert configuration option #
-            SRM_FLIP=""
+            else
+            
+                # Compose module channels array #
+                SRM_CHN_LIST="$(printf '%02d' $(($SRM_IDX_MODE-1))) $(printf '%02d' $(($SRM_IDX_MODE+7))) $(printf '%02d' $(($SRM_IDX_MODE+15)))"
 
-            # Compute channel crop rectangle #
-            SRM_CRPW=$(srm_askc $2 "pixelCorrectionWidth_$SRM_CHAN" )
-            SRM_CRPH=$(srm_askc $2 "pixelCorrectionHeight_$SRM_CHAN")
-            SRM_CRPX=0
-            SRM_CRPY=$(( $SRM_INDX * ( ${SRM_CRPH} + 16 ) ))
+            fi
 
-            # Crop channel rectangle #
-            convert $SRM_TMP_NAME/${3}_$1.tiff -crop ${SRM_CRPW}x${SRM_CRPH}+${SRM_CRPX}+${SRM_CRPY} $SRM_TMP_NAME/${3}_${SRM_CHAN}_channel.tiff &>/dev/null
+            # Module channels extraction #
+            SRM_CHN_INDX=0; for SRM_IDX_CHAN in $SRM_CHN_LIST; do
 
-            # Remove EXIF information from channel image #
-            exiv2 rm $SRM_TMP_NAME/${3}_${SRM_CHAN}_channel.tiff &>/dev/null
+                # Compute channel image rectangle #
+                SRM_CHN_CRPW=$(srm_askc ${SRM_IO_PART[2]} "pixelCorrectionWidth_$SRM_IDX_CHAN" )
+                SRM_CHN_CRPH=$(srm_askc ${SRM_IO_PART[2]} "pixelCorrectionHeight_$SRM_IDX_CHAN")
+                SRM_CHN_CRPX=0
+                SRM_CHN_CRPY=$(( $SRM_CHN_INDX * ( ${SRM_CHN_CRPH} + 16 ) ))
 
-            # Compute channel symetries #
-            SRM_SYMH=$(srm_askc $2 "hflip_$SRM_CHAN")
-            SRM_SYMV=$(srm_askc $2 "vflip_$SRM_CHAN")
+                # Extract channel image rectangle #
+                convert $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_MODE}.tiff -crop ${SRM_CHN_CRPW}x${SRM_CHN_CRPH}+${SRM_CHN_CRPX}+${SRM_CHN_CRPY} $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}_channel.tiff &>/dev/null
 
-            # Compose convert configuration variable #
-            if (( $SRM_SYMH == 1 )); then SRM_FLIP="$SRM_FLIP -flop"; fi
-            if (( $SRM_SYMV == 1 )); then SRM_FLIP="$SRM_FLIP -flip"; fi
+                # Remove EXIF information from channel image #
+                exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}_channel.tiff &>/dev/null
 
-            # Apply channel symetries #
-            convert $SRM_FLIP $SRM_TMP_NAME/${3}_${SRM_CHAN}_channel.tiff $SRM_TMP_NAME/${3}_${SRM_CHAN}.tiff &>/dev/null
+                # Reset channel image symetry descriptor #
+                SRM_CHN_FLIP=""
 
-            # Inject result in storage structure #
-            rsync $SRM_TMP_NAME/${3}_${SRM_CHAN}.tiff $SRM_IO_OPOS/${3}_${SRM_CHAN}.tiff
+                # Create channel image symetry descriptor #
+                if (( $(srm_askc ${SRM_IO_PART[2]} "hflip_$SRM_IDX_CHAN") == 1 )); then SRM_CHN_FLIP="$SRM_CHN_FLIP -flop"; fi
+                if (( $(srm_askc ${SRM_IO_PART[2]} "vflip_$SRM_IDX_CHAN") == 1 )); then SRM_CHN_FLIP="$SRM_CHN_FLIP -flip"; fi
 
-            # Update loop index #
-            SRM_INDX=$(( $SRM_INDX + 1 ))
+                # Compute channel image symetries #
+                convert $SRM_CHN_FLIP $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}_channel.tiff $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}.tiff &>/dev/null
+
+                # Inject result in storage structure #
+                rsync $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}.tiff $SRM_IO_OPOS/${SRM_IO_POSE}_${SRM_IDX_CHAN}.tiff
+
+                # Update loop index #
+                SRM_CHN_INDX=$(( $SRM_CHN_INDX + 1 ))
+
+            done
 
         done
 
@@ -235,10 +244,10 @@
 
 # Module kernel function
 #
-# The following instructions are responsible of performing the tasks the module
-# is supposed to do and constitute the main kernel function. The kernel function
-# is broadcasted to the different available computers according to the specified
-# network topology.
+# The kernel function is responsible of analyzing instructions provided by the
+# module main script and to trigger selected poses processing. This function is
+# broadcasted to the computers and threads according to the provided network
+# topology.
 
     # Arguments and parameters #
     srm_arg $@
@@ -249,18 +258,15 @@
     # Compose pose identification #
     SRM_IO_POSE=${SRM_IO_PART[5]}
 
-    # Compose source and destination #
+    # Compose pose source and destination directories #
     SRM_IO_IPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[0]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
     SRM_IO_OPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
 
     # Check source element #
     if [ ! -d $SRM_IO_IPOS ]; then
 
-        # Display message #
-        srm_echo "SRM Kernel : Error, invalid module kernel io specification"
-
-        # Update exit code #
-        SRM_SIG_EXIT=1
+        # Display message and update exit code #
+        srm_echo "SRM Kernel : Error, invalid module kernel io specification"; SRM_SIG_EXIT=1
 
     else
 
@@ -285,28 +291,8 @@
                     # Create destination directory #
                     mkdir -p $SRM_IO_OPOS
 
-                    # Retrieve device calibration #
-                    SRM_MODS=$(srm_askc ${SRM_IO_PART[2]} "modules")
-
-                    # Retrieve number of modules #
-                    for SRM_IDX in $(seq 1 $SRM_MODS); do
-
-                        # Move source file to temporary storage #
-                        cp -L $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_IDX.jp4 $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.jp4
-
-                        # Convert jp4 source file to adobe format #
-                        movie2dng --no-dng-rotation --dng $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.jp4 &>/dev/null
-
-                        # Apply debayer on source image #
-                        dcraw -q 3 -T $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.dng &>/dev/null
-
-                        # Remove EXIF information from module image #
-                        exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.tiff &>/dev/null
-
-                        # Process channels #
-                        srm_channels_eyesis4pi $SRM_IDX ${SRM_IO_PART[2]} $SRM_IO_POSE
-
-                    done
+                    # Refinement process #
+                    srm_dcraw_eyesis4pi
 
                     # Temporary storage #
                     srm_tmpfs delete
@@ -315,21 +301,15 @@
 
             else
 
-                # Display message #
-                srm_echo "SRM Kernel : Error, unknown device type"
-
-                # Update exit code #
-                SRM_SIG_EXIT=1
+                # Display message and update exit code #
+                srm_echo "SRM Kernel : Error, unknown device type"; SRM_SIG_EXIT=1
 
             fi
 
         else
 
-            # Display message #
-            srm_echo "SRM Kernel : Error, unknown module mode"
-
-            # Update exit code #
-            SRM_SIG_EXIT=1
+            # Display message and update exit code #
+            srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
 
         fi
 

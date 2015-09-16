@@ -98,7 +98,7 @@
 # Message display
 #
 # The following function simply displays the string provdided as parameter using
-# the standard error output.
+# the standard error as output.
 
     function srm_echo() {
 
@@ -118,7 +118,7 @@
         # Retrieve unix timestamps #
         SRM_TS_UNIX=(${1//_/ })
 
-        # Returns hashed timestmap #
+        # Returns hashed timestamps #
         echo $(( ${SRM_TS_UNIX[0]} / 100 ))
 
     }
@@ -163,7 +163,7 @@
 
     function srm_askc() {
 
-        # Read and returns value of key #
+        # Reads and returns value of key #
         echo $(grep "$2" $SRM_MNT_BASE/camera/$1/fastcal/calibration.key | cut -d'=' -f2)
 
     }
@@ -180,62 +180,62 @@
         export OMP_NUM_THREADS=$SRM_PLL_CONF
 
         # Extract timestamps #
-        SRM_EXE_TIME=$(basename $1); 
+        SRM_EXE_TIME=$(basename $SRM_IO_IPOS); 
         SRM_EXE_TIME=(${SRM_EXE_TIME//_/ })
 
         # Stitching of upper band #
         enblend-mp --wrap='horizontal' -o $SRM_TMP_NAME/tmp_top_band.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_R.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_05.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_06.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_07.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_00.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_01.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_02.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_03.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_L.tiff &> /dev/null
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_R.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_05.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_06.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_07.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_00.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_01.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_02.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_03.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_04_L.tiff &> /dev/null
 
         # Stitching of middle band #
         enblend-mp --wrap='horizontal' -o $SRM_TMP_NAME/tmp_mid_band.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_R.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_13.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_14.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_15.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_08.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_09.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_10.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_11.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_L.tiff &> /dev/null
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_R.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_13.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_14.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_15.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_08.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_09.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_10.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_11.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_12_L.tiff &> /dev/null
 
         # Stitching of bottom band #
         enblend-mp --wrap='horizontal' -o $SRM_TMP_NAME/tmp_bot_band.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_R.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_21.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_22.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_23.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_16.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_17.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_18.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_19.tiff \
-        $1/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_L.tiff &> /dev/null
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_R.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_21.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_22.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_23.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_16.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_17.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_18.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_19.tiff \
+        $SRM_IO_IPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}_20_L.tiff &> /dev/null
 
         # Stitching horizontal bands #
-        enblend-mp --wrap='vertical' -o $2/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff \
+        enblend-mp --wrap='vertical' -o $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff \
         $SRM_TMP_NAME/tmp_top_band.tiff \
         $SRM_TMP_NAME/tmp_mid_band.tiff \
         $SRM_TMP_NAME/tmp_bot_band.tiff &> /dev/null
 
         # Inject results in storage structure #
-        rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $2/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff &> /dev/null
+        rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $SRM_IO_OPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff
 
     }
 
 # Module kernel function
 #
-# The following instructions are responsible of performing the tasks the module
-# is supposed to do and constitute the main kernel function. The kernel function
-# is broadcasted to the different available computers according to the specified
-# network topology.
+# The kernel function is responsible of analyzing instructions provided by the
+# module main script and to trigger selected poses processing. This function is
+# broadcasted to the computers and threads according to the provided network
+# topology.
 
     # Arguments and parameters #
     srm_arg $@
@@ -246,18 +246,15 @@
     # Compose pose identification #
     SRM_IO_POSE=${SRM_IO_PART[5]}
 
-    # Compose source and destination #
+    # Compose pose source and destination directories #
     SRM_IO_IPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[0]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
     SRM_IO_OPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
 
     # Check source element #
     if [ ! -d $SRM_IO_IPOS ]; then
 
-        # Display message #
-        srm_echo "SRM Kernel : Error, invalid module kernel io specification"
-
-        # Update exit code #
-        SRM_SIG_EXIT=1
+        # Display message and update exit code #
+        srm_echo "SRM Kernel : Error, invalid module kernel io specification"; SRM_SIG_EXIT=1
 
     else
 
@@ -283,7 +280,7 @@
                     mkdir -p $SRM_IO_OPOS
 
                     # Refinement process #
-                    srm_enblend_eysis4pi $SRM_IO_IPOS $SRM_IO_OPOS
+                    srm_enblend_eysis4pi
 
                     # Temporary storage #
                     srm_tmpfs delete
@@ -292,21 +289,15 @@
 
             else
 
-                # Display message #
-                srm_echo "SRM Kernel : Error, unknown device type"
-
-                # Update exit code #
-                SRM_SIG_EXIT=1
+                # Display message and update exit code #
+                srm_echo "SRM Kernel : Error, unknown device type"; SRM_SIG_EXIT=1
 
             fi
 
         else
 
-            # Display message #
-            srm_echo "SRM Kernel : Error, unknown module mode"
-
-            # Update exit code #
-            SRM_SIG_EXIT=1
+            # Display message and update exit code #
+            srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
 
         fi
 

@@ -95,7 +95,7 @@
 # Message display
 #
 # The following function simply displays the string provdided as parameter using
-# the standard error output.
+# the standard error as output.
 
     function srm_echo() {
 
@@ -115,7 +115,7 @@
         # Retrieve unix timestamps #
         SRM_TS_UNIX=(${1//_/ })
 
-        # Returns hashed timestmap #
+        # Returns hashed timestamps #
         echo $(( ${SRM_TS_UNIX[0]} / 100 ))
 
     }
@@ -160,17 +160,17 @@
 
     function srm_askc() {
 
-        # Read and returns value of key #
+        # Reads and returns value of key #
         echo $(grep "$2" $SRM_MNT_BASE/camera/$1/fastcal/calibration.key | cut -d'=' -f2)
 
     }
 
 # Module kernel function
 #
-# The following instructions are responsible of performing the tasks the module
-# is supposed to do and constitute the main kernel function. The kernel function
-# is broadcasted to the different available computers according to the specified
-# network topology.
+# The kernel function is responsible of analyzing instructions provided by the
+# module main script and to trigger selected poses processing. This function is
+# broadcasted to the computers and threads according to the provided network
+# topology.
 
     # Arguments and parameters #
     srm_arg $@
@@ -190,11 +190,8 @@
     # Check source element #
     if [ ! -f ${SRM_IO_IPOS}_1.jp4 ]; then
 
-        # Display message #
-        srm_echo "SRM Kernel : Error, invalid module kernel io specification"
-
-        # Update exit code #
-        SRM_SIG_EXIT=1
+        # Display message and update exit code #
+        srm_echo "SRM Kernel : Error, invalid module kernel io specification"; SRM_SIG_EXIT=1
 
     else
 
@@ -220,7 +217,7 @@
                 while [ -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 ]; do
 
                     # Create soft link #
-                    ln -s -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 $SRM_IO_OPOS/
+                    ln -sf ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 $SRM_IO_OPOS/
 
                     # Update index #
                     SRM_IO_MODE=$(( $SRM_IO_MODE + 1 ))
@@ -231,11 +228,8 @@
 
         else
 
-            # Display message #
-            srm_echo "SRM Kernel : Error, unknown device constructor"
-
-            # Update exit code #
-            SRM_SIG_EXIT=1
+            # Display message and update exit code #
+            srm_echo "SRM Kernel : Error, unknown device constructor"; SRM_SIG_EXIT=1
 
         fi
 

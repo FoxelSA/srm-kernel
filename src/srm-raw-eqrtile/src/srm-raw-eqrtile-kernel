@@ -98,7 +98,7 @@
 # Message display
 #
 # The following function simply displays the string provdided as parameter using
-# the standard error output.
+# the standard error as output.
 
     function srm_echo() {
 
@@ -118,7 +118,7 @@
         # Retrieve unix timestamps #
         SRM_TS_UNIX=(${1//_/ })
 
-        # Returns hashed timestmap #
+        # Returns hashed timestamps #
         echo $(( ${SRM_TS_UNIX[0]} / 100 ))
 
     }
@@ -163,7 +163,7 @@
 
     function srm_askc() {
 
-        # Read and returns value of key #
+        # Reads and returns value of key #
         echo $(grep "$2" $SRM_MNT_BASE/camera/$1/fastcal/calibration.key | cut -d'=' -f2)
 
     }
@@ -172,80 +172,88 @@
 #
 # This function implements the Elphel plugin call to perform refinement of the
 # data considered by the module. It starts by editing the configuration file in
-# order to specify the correct path befor to call the plugin.
+# order to specify the correct path befor to call the plugin. It ends its task
+# by renaming the output files and by merging tile that are provided in two
+# parts by the Elphel plugin.
 
     function srm_elphel_plugin() {
 
-        # Clear modified XML #
-        > $2
+        # Defines XML keys #
+        SRM_XML_TAG01="CORRECTION_PARAMETERS.smoothKernelDirectory"
+        SRM_XML_TAG02="CORRECTION_PARAMETERS.sharpKernelDirectory"
+        SRM_XML_TAG03="CORRECTION_PARAMETERS.sensorDirectory"
+        SRM_XML_TAG04="CORRECTION_PARAMETERS.equirectangularDirectory"
+        SRM_XML_TAG05="CORRECTION_PARAMETERS.resultsDirectory"
+        SRM_XML_TAG06="CORRECTION_PARAMETERS.sourcePath"
+        SRM_XML_TAG07="CORRECTION_PARAMETERS.sourcePaths"
 
-        # Read XML by line #
-        while read SRM_LINE; do
+        # Compose edited XML configuration file path #
+        SRM_XML_PATH=$SRM_TMP_NAME/elphel-correction.xml
+
+        # Creating edited XML configuration file #
+        > $SRM_XML_PATH; while read SRM_LINE; do
 
             # Detects specific keys #
-            if [[ $SRM_LINE == *"CORRECTION_PARAMETERS.smoothKernelDirectory"* ]]; then
+            if [[ $SRM_LINE == *$SRM_XML_TAG01* ]]; then
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.smoothKernelDirectory\">$3/calibration/kernels/smooth</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG01\">$SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/calibration/kernels/smooth</entry>" >> $SRM_XML_PATH
 
-            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.sharpKernelDirectory"* ]]; then
+            elif [[ $SRM_LINE == *$SRM_XML_TAG02* ]]; then
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.sharpKernelDirectory\">$3/calibration/kernels/sharp</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG02\">$SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/calibration/kernels/sharp</entry>" >> $SRM_XML_PATH
 
-            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.sensorDirectory"* ]]; then
+            elif [[ $SRM_LINE == *$SRM_XML_TAG03* ]]; then
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.sensorDirectory\">$3/calibration/sensors</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG03\">$SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/calibration/sensors</entry>" >> $SRM_XML_PATH
 
-            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.equirectangularDirectory"* ]]; then
+            elif [[ $SRM_LINE == *$SRM_XML_TAG04* ]]; then
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.equirectangularDirectory\">$3/calibration/maps</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG04\">$SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/calibration/maps</entry>" >> $SRM_XML_PATH
 
-            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.resultsDirectory"* ]]; then
+            elif [[ $SRM_LINE == *$SRM_XML_TAG05* ]]; then
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.resultsDirectory\">$SRM_TMP_NAME</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG05\">$SRM_TMP_NAME</entry>" >> $SRM_XML_PATH
 
             elif [[ $SRM_LINE == *"THREADS_MAX"* ]]; then
 
-                # Modulated exportation #
-                echo "<entry key=\"THREADS_MAX\">$SRM_PLL_CONF</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"THREADS_MAX\">$SRM_PLL_CONF</entry>" >> $SRM_XML_PATH
 
             elif [[ $SRM_LINE == *"</properties>"* ]]; then
 
-                # Reset count index #
-                SRM_LS_NUMS=0
+                # Inserting source file in configuration #
+                SRM_LS_NUMS=0; for SRM_LS_FILE in $SRM_IO_IPOS/*.jp4; do
 
-                # Enumeration of source file #
-                for SRM_LS_FILE in $4/*.jp4; do
-
-                    # Modulated exportation #
-                    echo "<entry key=\"CORRECTION_PARAMETERS.sourcePath${SRM_LS_NUMS}\">$SRM_LS_FILE</entry>" >> $2
+                    # Export XML entry #
+                    echo "<entry key=\"${SRM_XML_TAG06}${SRM_LS_NUMS}\">$SRM_LS_FILE</entry>" >> $SRM_XML_PATH
 
                     # Update index #
                     SRM_LS_NUMS=$(( $SRM_LS_NUMS + 1 ))
 
                 done
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.sourcePaths\">$SRM_LS_NUMS</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG07\">$SRM_LS_NUMS</entry>" >> $SRM_XML_PATH
 
-                # Export line #
-                echo $SRM_LINE >> $2
+                # Export XML entry #
+                echo $SRM_LINE >> $SRM_XML_PATH
 
-            elif [[ ! $SRM_LINE == *"CORRECTION_PARAMETERS.sourcePath"* ]]; then
+            elif [[ ! $SRM_LINE == *$SRM_XML_TAG06* ]]; then
 
-                # Export line #
-                echo $SRM_LINE >> $2
+                # Export XML entry #
+                echo $SRM_LINE >> $SRM_XML_PATH
 
             fi
 
-        done < $1
+        done < $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/imagej-elphel/prefs.xml
 
         # Elphel plugin #
-        ImageJ-linux64 --headless --mem 7150m --run Eyesis_Correction prefs=$2 &> /dev/null
+        ImageJ-linux64 --headless --mem 7150m --run Eyesis_Correction prefs=$SRM_XML_PATH &> /dev/null
 
         # Parsing result image #
         for SRM_EXE_FILE in $SRM_TMP_NAME/*.tiff; do
@@ -307,16 +315,16 @@
         done
 
         # Inject results in storage structure #
-        rsync $SRM_TMP_NAME/*.tiff $5/
+        rsync $SRM_TMP_NAME/*.tiff $SRM_IO_OPOS/
 
     }
 
 # Module kernel function
 #
-# The following instructions are responsible of performing the tasks the module
-# is supposed to do and constitute the main kernel function. The kernel function
-# is broadcasted to the different available computers according to the specified
-# network topology.
+# The kernel function is responsible of analyzing instructions provided by the
+# module main script and to trigger selected poses processing. This function is
+# broadcasted to the computers and threads according to the provided network
+# topology.
 
     # Arguments and parameters #
     srm_arg $@
@@ -327,18 +335,15 @@
     # Compose pose identification #
     SRM_IO_POSE=${SRM_IO_PART[5]}
 
-    # Compose source and destination #
+    # Compose pose source and destination directories #
     SRM_IO_IPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[0]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
     SRM_IO_OPOS=$SRM_MNT_BASE/pose/${SRM_IO_PART[1]}/data/${SRM_IO_PART[2]}/master/${SRM_IO_PART[3]}/segment/${SRM_IO_PART[4]}/pose/$(srm_tshash ${SRM_IO_PART[5]})/${SRM_IO_PART[5]}
 
     # Check source element #
     if [ ! -d $SRM_IO_IPOS ]; then
 
-        # Display message #
-        srm_echo "SRM Kernel : Error, invalid module kernel io specification"
-
-        # Update exit code #
-        SRM_SIG_EXIT=1
+        # Display message and update exit code #
+        srm_echo "SRM Kernel : Error, invalid module kernel io specification"; SRM_SIG_EXIT=1
 
     else
 
@@ -364,7 +369,7 @@
                     mkdir -p $SRM_IO_OPOS
 
                     # Refinement process #
-                    srm_elphel_plugin $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/imagej-elphel/prefs.xml $SRM_TMP_NAME/elphel-correction.xml $SRM_MNT_BASE/camera/${SRM_IO_PART[2]} $SRM_IO_IPOS $SRM_IO_OPOS
+                    srm_elphel_plugin
 
                     # Temporary storage #
                     srm_tmpfs delete
@@ -373,21 +378,15 @@
 
             else
 
-                # Display message #
-                srm_echo "SRM Kernel : Error, unknown device constructor"
-
-                # Update exit code #
-                SRM_SIG_EXIT=1
+                # Display message and update exit code #
+                srm_echo "SRM Kernel : Error, unknown device constructor"; SRM_SIG_EXIT=1
 
             fi
 
         else
 
-            # Display message #
-            srm_echo "SRM Kernel : Error, unknown module mode"
-
-            # Update exit code #
-            SRM_SIG_EXIT=1
+            # Display message and update exit code #
+            srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
 
         fi
 
