@@ -185,6 +185,7 @@
         SRM_XML_TAG04="CORRECTION_PARAMETERS.equirectangularDirectory"
         SRM_XML_TAG05="CORRECTION_PARAMETERS.resultsDirectory"
         SRM_XML_TAG06="CORRECTION_PARAMETERS.sourcePath"
+        SRM_XML_TAG07="CORRECTION_PARAMETERS.sourcePaths"
 
         # Creating edited XML configuration file #
         > $2; while read SRM_LINE; do
@@ -234,7 +235,7 @@
                 done
 
                 # Export XML entry #
-                echo "<entry key=\"$SRM_XML_TAG06\">$SRM_LS_NUMS</entry>" >> $2
+                echo "<entry key=\"$SRM_XML_TAG07\">$SRM_LS_NUMS</entry>" >> $2
 
                 # Export XML entry #
                 echo $SRM_LINE >> $2
