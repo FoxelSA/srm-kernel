@@ -190,7 +190,7 @@
 
     function srm_parallel() {
 
-        # Check for file #
+        # Check for configuration file #
         if [ -e $SRM_PLL_CONF ]; then
 
             # Compose parallel command #
@@ -214,14 +214,12 @@
 
     function srm_selected() {
 
-        # Decompose pose timestamps #
+        # Decompose timestamps in second and micro-seconds #
         SRM_TS_PART=(${1//_/ })
-        SRM_TS_UNIX=$((10#${SRM_TS_PART[0]}))
-        SRM_TS_USEC=$((10#${SRM_TS_PART[1]}))
-
-        # Decompose mmsr downer and upper timestamps #
         SRM_ML_PART=(${2//_/ })
         SRM_MH_PART=(${3//_/ })
+        SRM_TS_UNIX=$((10#${SRM_TS_PART[0]}))
+        SRM_TS_USEC=$((10#${SRM_TS_PART[1]}))
         SRM_ML_UNIX=$((10#${SRM_ML_PART[0]}))
         SRM_MH_UNIX=$((10#${SRM_MH_PART[0]}))
         SRM_ML_USEC=$((10#${SRM_ML_PART[1]}))
@@ -230,43 +228,47 @@
         # Initialize result #
         SRM_RETURN=1
 
-        # Check downer boundary #
+        # Check downer boundary - seconds #
         if (( $SRM_TS_UNIX < $SRM_ML_UNIX )); then
 
-            # Return result #
+            # Update result #
             SRM_RETURN=0
 
-        fi
+        else
 
-        # Check downer boundary #
-        if (( $SRM_TS_UNIX == $SRM_ML_UNIX )); then
+            # Check downer boundary - seconds #
+            if (( $SRM_TS_UNIX == $SRM_ML_UNIX )); then
 
-            # Check decimale boundary #
-            if (( $SRM_TS_USEC < $SRM_ML_USEC )); then
+                # Check downer boundary - micro-seconds #
+                if (( $SRM_TS_USEC < $SRM_ML_USEC )); then
 
-                # Return result #
-                SRM_RETURN=0
+                    # Update result #
+                    SRM_RETURN=0
+
+                fi
 
             fi
 
         fi
 
-        # Check upper boundary #
+        # Check upper boundary - seconds #
         if (( $SRM_TS_UNIX > $SRM_MH_UNIX )); then
 
-            # Return result #
+            # Update result #
             SRM_RETURN=0
 
-        fi
+        else
 
-        # Check upper boundary #
-        if (( $SRM_TS_UNIX == $SRM_MH_UNIX )); then
+            # Check upper boundary - seconds #
+            if (( $SRM_TS_UNIX == $SRM_MH_UNIX )); then
 
-            # Check decimale boundary #
-            if (( $SRM_TS_USEC > $SRM_ML_USEC )); then
+                # Check decimale boundary - micro-seconds #
+                if (( $SRM_TS_USEC > $SRM_ML_USEC )); then
 
-                # Return result #
-                SRM_RETURN=0
+                    # Update result #
+                    SRM_RETURN=0
+
+                fi
 
             fi
 
@@ -285,38 +287,31 @@
 
     function srm_init() {
 
-        # Node directory #
-        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS
+        # Create command informations #
+        SRM_NOD_INFO="$(date +"%d.%m.%Y@%T(%z)") $USER@$HOSTNAME \$ $SRM_CMD_NORM"
 
-        # Node structure #
+        # Create/update node directories #
+        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS
         mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info
         mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/data
 
-        # Node classification #
+        # Create/update node information #
         echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/class-output
         echo $SRM_IO_ICLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/class-input
+        echo $SRM_MOD_OHAS  > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/hash-output
+        echo $SRM_MOD_IHAS  > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/hash-input
+        echo $SRM_CMD_HASH  > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command-hash
 
-        # Node filiation #
-        echo $SRM_MOD_OHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/hash-output
-        echo $SRM_MOD_IHAS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/hash-input
-
-        # Node simplified commands #
-        echo $SRM_CMD_HASH > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command-hash
-
-        # Node normalized commands #
-        echo "$(date)|$USER@$HOSTNAME\$$SRM_CMD_NORM" >> $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command-history
+        # Update node command history #
+        echo "$SRM_NOD_INFO" >> $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command-history
 
     }
 
 # Module main function
 #
-# The following instrucations constitute the module main function. The main
-# function is responsible of enumerating the poses that have to be considered
-# by the module kernel script which is responsible of the actual mmsr addresses
-# poses processing.
-#
-# The main function is also responsible of the management of errors and the 
-# signal send to the system.
+# The main function is responsible of enumerating the poses that have to be
+# considered and processed by the module kernel script. Moreover, the main
+# function is also responsible of the management of the module execution mode.
 
     # Arguments and parameters #
     srm_arg $@
@@ -364,7 +359,7 @@
                     SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
                     SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
 
-                    # Parse mmrs address #
+                    # Parse pose files #
                     for SRM_EXE_SRC in $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/**/*; do
 
                         # Check for directory #
@@ -409,7 +404,7 @@
         # Display available source nodes #
         for SRM_NOD_INPUT in $SRM_MNT_BASE/pose/*; do
 
-            # Check for directories #
+            # Check the node input classification #
             if [ -e $SRM_NOD_INPUT/info/classification ] && [ "$(cat $SRM_NOD_INPUT/info/classification)" == "$SRM_IO_ICLASS" ]; then
 
                 # Display source node #
@@ -436,11 +431,8 @@
 
     else
 
-        # Display message #
+        # Display message and update exit code #
         srm_echo "SRM - Kernel : Error, invalid module mode"; SRM_SIG_EXIT=1
-
-        # Update exit code #
-        SRM_SIG_EXIT=1
 
     fi
 
