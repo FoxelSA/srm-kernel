@@ -131,41 +131,47 @@
 
         # Create token array #
         SRM_INS_PART=($SRM_CMD_HASH)
-        SRM_INS_SIZE=${#SRM_INS_PART[@]}
 
         # Reset simplified command #
         SRM_CMD_HASH="${SRM_INS_PART[0]}"
 
-        # Initialize insertion flag #
-        SRM_INS_FLAG=0
+        # Detects empty command #
+        if (( ${#SRM_INS_PART[@]} == 1 )); then
 
-        # Reordered insertion #
-        for (( i = 1; i <= $SRM_INS_SIZE; i = i + 2 )); do
+            # Insert arguments and parameters #
+            SRM_CMD_HASH="$SRM_CMD_HASH $1 $2"
 
-            # Arguments and parameter sorting #
-            if (( $( printf "%d" "'${SRM_INS_PART[$i]:1:1}" ) > $( printf "%d" "'${1:1:1}" ) )) && (( $SRM_INS_FLAG == 0 )); then
+        else
 
-                # Insert argument and parameter and update insertion flag #
-                SRM_CMD_HASH="$SRM_CMD_HASH $1 $2 ${SRM_INS_PART[$i]} ${SRM_INS_PART[$((i+1))]}"; SRM_INS_FLAG=1
+            # Ordered insertion of arguments and parameters #
+            SRM_INS_FLAG=0; for (( i = 1; i < ${#SRM_INS_PART[@]}; i = i + 2 )); do
 
-            else
+                # Arguments and parameter sorting #
+                if (( $( printf "%d" "'${SRM_INS_PART[$i]:1:1}" ) > $( printf "%d" "'${1:1:1}" ) )) && (( $SRM_INS_FLAG == 0 )); then
 
-                # Token array parsing verification #
-                if (( $(( $i + 2 )) >= $SRM_INS_SIZE )) && (( $SRM_INS_FLAG == 0 )); then
-
-                    # Insert argument and parameter and update insertion flag #
-                    SRM_CMD_HASH="$SRM_CMD_HASH ${SRM_INS_PART[$i]} ${SRM_INS_PART[$((i+1))]} $1 $2"; SRM_INS_FLAG=1
+                    # Insert arguments and parameters and update insertion flag #
+                    SRM_CMD_HASH="$SRM_CMD_HASH $1 $2 ${SRM_INS_PART[$i]} ${SRM_INS_PART[$((i+1))]}"; SRM_INS_FLAG=1
 
                 else
 
-                    # Insert argument and parameter #
-                    SRM_CMD_HASH="$SRM_CMD_HASH ${SRM_INS_PART[$i]} ${SRM_INS_PART[$((i+1))]}"
+                    # Check insertion ending #
+                    if (( $i + 2 == ${#SRM_INS_PART[@]} )) && (( $SRM_INS_FLAG == 0 )); then
+
+                        # Insert arguments and parameters #
+                        SRM_CMD_HASH="$SRM_CMD_HASH ${SRM_INS_PART[$i]} ${SRM_INS_PART[$((i+1))]} $1 $2"
+
+                    else
+
+                        # Insert arguments and parameters #
+                        SRM_CMD_HASH="$SRM_CMD_HASH ${SRM_INS_PART[$i]} ${SRM_INS_PART[$((i+1))]}"
+
+                    fi
 
                 fi
 
-            fi
+            done
 
-        done
+        fi
 
     }
 

@@ -217,7 +217,7 @@
                 while [ -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 ]; do
 
                     # Create soft link #
-                    ln -s -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 $SRM_IO_OPOS/
+                    ln -sf ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 $SRM_IO_OPOS/
 
                     # Update index #
                     SRM_IO_MODE=$(( $SRM_IO_MODE + 1 ))

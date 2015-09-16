@@ -172,72 +172,76 @@
 #
 # This function implements the Elphel plugin call to perform refinement of the
 # data considered by the module. It starts by editing the configuration file in
-# order to specify the correct path befor to call the plugin.
+# order to specify the correct path befor to call the plugin. It ends its task
+# by renaming the output files and by merging tile that are provided in two
+# parts by the Elphel plugin.
 
     function srm_elphel_plugin() {
 
-        # Clear modified XML #
-        > $2
+        # Defines XML keys #
+        SRM_XML_TAG01="CORRECTION_PARAMETERS.smoothKernelDirectory"
+        SRM_XML_TAG02="CORRECTION_PARAMETERS.sharpKernelDirectory"
+        SRM_XML_TAG03="CORRECTION_PARAMETERS.sensorDirectory"
+        SRM_XML_TAG04="CORRECTION_PARAMETERS.equirectangularDirectory"
+        SRM_XML_TAG05="CORRECTION_PARAMETERS.resultsDirectory"
+        SRM_XML_TAG06="CORRECTION_PARAMETERS.sourcePath"
 
-        # Read XML by line #
-        while read SRM_LINE; do
+        # Creating edited XML configuration file #
+        > $2; while read SRM_LINE; do
 
             # Detects specific keys #
-            if [[ $SRM_LINE == *"CORRECTION_PARAMETERS.smoothKernelDirectory"* ]]; then
+            if [[ $SRM_LINE == *$SRM_XML_TAG01* ]]; then
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.smoothKernelDirectory\">$3/calibration/kernels/smooth</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG01\">$3/calibration/kernels/smooth</entry>" >> $2
 
-            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.sharpKernelDirectory"* ]]; then
+            elif [[ $SRM_LINE == *$SRM_XML_TAG02* ]]; then
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.sharpKernelDirectory\">$3/calibration/kernels/sharp</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG02\">$3/calibration/kernels/sharp</entry>" >> $2
 
-            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.sensorDirectory"* ]]; then
+            elif [[ $SRM_LINE == *$SRM_XML_TAG03* ]]; then
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.sensorDirectory\">$3/calibration/sensors</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG03\">$3/calibration/sensors</entry>" >> $2
 
-            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.equirectangularDirectory"* ]]; then
+            elif [[ $SRM_LINE == *$SRM_XML_TAG04* ]]; then
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.equirectangularDirectory\">$3/calibration/maps</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG04\">$3/calibration/maps</entry>" >> $2
 
-            elif [[ $SRM_LINE == *"CORRECTION_PARAMETERS.resultsDirectory"* ]]; then
+            elif [[ $SRM_LINE == *$SRM_XML_TAG05* ]]; then
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.resultsDirectory\">$SRM_TMP_NAME</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG05\">$SRM_TMP_NAME</entry>" >> $2
 
             elif [[ $SRM_LINE == *"THREADS_MAX"* ]]; then
 
-                # Modulated exportation #
+                # Export XML entry #
                 echo "<entry key=\"THREADS_MAX\">$SRM_PLL_CONF</entry>" >> $2
 
             elif [[ $SRM_LINE == *"</properties>"* ]]; then
 
-                # Reset count index #
-                SRM_LS_NUMS=0
+                # Inserting source file in configuration #
+                SRM_LS_NUMS=0; for SRM_LS_FILE in $4/*.jp4; do
 
-                # Enumeration of source file #
-                for SRM_LS_FILE in $4/*.jp4; do
-
-                    # Modulated exportation #
-                    echo "<entry key=\"CORRECTION_PARAMETERS.sourcePath${SRM_LS_NUMS}\">$SRM_LS_FILE</entry>" >> $2
+                    # Export XML entry #
+                    echo "<entry key=\"${SRM_XML_TAG06}${SRM_LS_NUMS}\">$SRM_LS_FILE</entry>" >> $2
 
                     # Update index #
                     SRM_LS_NUMS=$(( $SRM_LS_NUMS + 1 ))
 
                 done
 
-                # Modulated exportation #
-                echo "<entry key=\"CORRECTION_PARAMETERS.sourcePaths\">$SRM_LS_NUMS</entry>" >> $2
+                # Export XML entry #
+                echo "<entry key=\"$SRM_XML_TAG06\">$SRM_LS_NUMS</entry>" >> $2
 
-                # Export line #
+                # Export XML entry #
                 echo $SRM_LINE >> $2
 
-            elif [[ ! $SRM_LINE == *"CORRECTION_PARAMETERS.sourcePath"* ]]; then
+            elif [[ ! $SRM_LINE == *$SRM_XML_TAG06* ]]; then
 
-                # Export line #
+                # Export XML entry #
                 echo $SRM_LINE >> $2
 
             fi
