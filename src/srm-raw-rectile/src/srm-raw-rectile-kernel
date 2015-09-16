@@ -171,30 +171,29 @@
 # Module kernel specific function (channel-extraction@eyesis4pi)
 #
 # This function is responsible of the camera channels image extraction on the
-# basis of the composite raw image coming from camera modules. It expects the
-# module number (1-9), the camera MAC address and the pose identification. On
-# this basis it extract the channels image and apply the required symetries
-# according to the calibration data.
+# basis of the composite raw image coming from camera modules. Channel images
+# are extracted from module images on the basis of the calibration data and
+# symetries are applied to retrieve the original channel images.
 
     function srm_dcraw_eyesis4pi() {
 
         # Parsing device modules #
-        for SRM_IDX_MOD in $(seq 1 $(srm_askc ${SRM_IO_PART[2]} "modules")); do
+        for SRM_IDX_MODE in $(seq 1 $(srm_askc ${SRM_IO_PART[2]} "modules")); do
 
             # Copy source file to temporary storage #
-            cp -L $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_IDX_MOD.jp4 $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MOD.jp4
+            cp -L $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_IDX_MODE.jp4 $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MODE.jp4
 
             # Convert jp4 source file to adobe format #
-            movie2dng --no-dng-rotation --dng $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MOD.jp4 &>/dev/null
+            movie2dng --no-dng-rotation --dng $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MODE.jp4 &>/dev/null
 
             # Debayer source image #
-            dcraw -q 3 -T $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MOD.dng &>/dev/null
+            dcraw -q 3 -T $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MODE.dng &>/dev/null
 
             # Remove EXIF information from module image #
-            #exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MOD.tiff &>/dev/null
+            exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MODE.tiff &>/dev/null
 
             # Convert module index to channles list #
-            if (( $SRM_IDX_MOD == 9 )); then
+            if (( $SRM_IDX_MODE == 9 )); then
 
                 # Compose module channels array #
                 SRM_CHN_LIST="24 25"
@@ -202,7 +201,7 @@
             else
             
                 # Compose module channels array #
-                SRM_CHN_LIST="$(printf '%02d' $(($1-1))) $(printf '%02d' $(($1+7))) $(printf '%02d' $(($1+15)))"
+                SRM_CHN_LIST="$(printf '%02d' $(($SRM_IDX_MODE-1))) $(printf '%02d' $(($SRM_IDX_MODE+7))) $(printf '%02d' $(($SRM_IDX_MODE+15)))"
 
             fi
 
@@ -210,29 +209,29 @@
             SRM_CHN_INDX=0; for SRM_IDX_CHAN in $SRM_CHN_LIST; do
 
                 # Compute channel image rectangle #
-                SRM_CHN_CRPW=$(srm_askc $2 "pixelCorrectionWidth_$SRM_IDX_CHAN" )
-                SRM_CHN_CRPW=$(srm_askc $2 "pixelCorrectionHeight_$SRM_IDX_CHAN")
+                SRM_CHN_CRPW=$(srm_askc ${SRM_IO_PART[2]} "pixelCorrectionWidth_$SRM_IDX_CHAN" )
+                SRM_CHN_CRPW=$(srm_askc ${SRM_IO_PART[2]} "pixelCorrectionHeight_$SRM_IDX_CHAN")
                 SRM_CHN_CRPX=0
                 SRM_CHN_CRPY=$(( $SRM_CHN_INDX * ( ${SRM_CHN_CRPW} + 16 ) ))
 
                 # Extract channel image rectangle #
-                convert $SRM_TMP_NAME/${3}_$1.tiff -crop ${SRM_CHN_CRPW}x${SRM_CHN_CRPW}+${SRM_CHN_CRPX}+${SRM_CHN_CRPY} $SRM_TMP_NAME/${3}_${SRM_IDX_CHAN}_channel.tiff &>/dev/null
+                convert $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_MODE}.tiff -crop ${SRM_CHN_CRPW}x${SRM_CHN_CRPW}+${SRM_CHN_CRPX}+${SRM_CHN_CRPY} $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}_channel.tiff &>/dev/null
 
                 # Remove EXIF information from channel image #
-                #exiv2 rm $SRM_TMP_NAME/${3}_${SRM_IDX_CHAN}_channel.tiff &>/dev/null
+                exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}_channel.tiff &>/dev/null
 
                 # Reset channel image symetry descriptor #
                 SRM_CHN_FLIP=""
 
                 # Create channel image symetry descriptor #
-                if (( $(srm_askc $2 "hflip_$SRM_IDX_CHAN") == 1 )); then SRM_CHN_FLIP="$SRM_CHN_FLIP -flop"; fi
-                if (( $(srm_askc $2 "vflip_$SRM_IDX_CHAN") == 1 )); then SRM_CHN_FLIP="$SRM_CHN_FLIP -flip"; fi
+                if (( $(srm_askc ${SRM_IO_PART[2]} "hflip_$SRM_IDX_CHAN") == 1 )); then SRM_CHN_FLIP="$SRM_CHN_FLIP -flop"; fi
+                if (( $(srm_askc ${SRM_IO_PART[2]} "vflip_$SRM_IDX_CHAN") == 1 )); then SRM_CHN_FLIP="$SRM_CHN_FLIP -flip"; fi
 
                 # Compute channel image symetries #
-                convert $SRM_CHN_FLIP $SRM_TMP_NAME/${3}_${SRM_IDX_CHAN}_channel.tiff $SRM_TMP_NAME/${3}_${SRM_IDX_CHAN}.tiff &>/dev/null
+                convert $SRM_CHN_FLIP $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}_channel.tiff $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}.tiff &>/dev/null
 
                 # Inject result in storage structure #
-                rsync $SRM_TMP_NAME/${3}_${SRM_IDX_CHAN}.tiff $SRM_IO_OPOS/${3}_${SRM_IDX_CHAN}.tiff
+                rsync $SRM_TMP_NAME/${SRM_IO_POSE}_${SRM_IDX_CHAN}.tiff $SRM_IO_OPOS/${SRM_IO_POSE}_${SRM_IDX_CHAN}.tiff
 
                 # Update loop index #
                 SRM_CHN_INDX=$(( $SRM_CHN_INDX + 1 ))
