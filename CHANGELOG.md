@@ -2,6 +2,7 @@
 
 ### Beta 0.3.1
 
+- `Added` : **srm-eqrtile-rectile** equirectangular to rectilinear tile
 - `Fixed` : Result synchronization in **srm-eqrtile-panorama**
 - `Fixed` : Octal misinterpretation of timestamps
 
