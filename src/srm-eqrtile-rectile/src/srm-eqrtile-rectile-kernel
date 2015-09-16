@@ -184,8 +184,8 @@
             SRM_HMAP=$(srm_askc ${SRM_IO_PART[2]} "ImageFullLength_$SRM_TILE")
 
             # Retrieve tile size #
-            SRM_WTIL=$(srm_askc ${SRM_IO_PART[2]} "equirectangularWidth_$SRM_TILE" )
-            SRM_HTIL=$(srm_askc ${SRM_IO_PART[2]} "equirectangularHeight_$SRM_TILE")
+            SRM_WTIL=$(srm_askc ${SRM_IO_PART[2]} "pixelCorrectionWidth_$SRM_TILE" )
+            SRM_HTIL=$(srm_askc ${SRM_IO_PART[2]} "pixelCorrectionHeight_$SRM_TILE")
 
             # Retrieve tile position #
             SRM_XPOS=$(srm_askc ${SRM_IO_PART[2]} "XPosition_$SRM_TILE")
@@ -201,22 +201,25 @@
             # Compute inverted gnomonic projection #
             norama-direct -E -i $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_TILE.tiff -o $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff \
             --interpolation bicubicf \
-            --threads    $SRM_PLL_CONF \
-            --eqr-width  $SRM_WTIL \
-            --eqr-height $SRM_HTIL \
-            --map-width  $SRM_WMAP \
-            --map-height $SRM_HMAP \
-            --sight-x    $(srm_askc ${SRM_IO_PART[2]} "px0_$SRM_TILE") \
-            --sight-y    $(srm_askc ${SRM_IO_PART[2]} "py0_$SRM_TILE") \
-            --tile-x     $SRM_XPOS \
-            --tile-y     $SRM_YPOS \
-            --azimuth    $SRM_AZIM \
-            --heading    $SRM_HEAD \
-            --elevation  $SRM_ELEV \
-            --roll       $SRM_ROLL \
-            --focal      $(srm_askc ${SRM_IO_PART[2]} "focalLength_$SRM_TILE") \
-            --pixel      $(srm_askc ${SRM_IO_PART[2]} "pixelSize_$SRM_TILE") \
+            --threads     $SRM_PLL_CONF \
+            --rect-width  $SRM_WTIL \
+            --rect-height $SRM_HTIL \
+            --map-width   $SRM_WMAP \
+            --map-height  $SRM_HMAP \
+            --sight-x     $(srm_askc ${SRM_IO_PART[2]} "px0_$SRM_TILE") \
+            --sight-y     $(srm_askc ${SRM_IO_PART[2]} "py0_$SRM_TILE") \
+            --tile-x      $SRM_XPOS \
+            --tile-y      $SRM_YPOS \
+            --azimuth     $SRM_AZIM \
+            --heading     $SRM_HEAD \
+            --elevation   $SRM_ELEV \
+            --roll        $SRM_ROLL \
+            --focal       $(srm_askc ${SRM_IO_PART[2]} "focalLength_$SRM_TILE") \
+            --pixel       $(srm_askc ${SRM_IO_PART[2]} "pixelSize_$SRM_TILE") \
             --force-rgb
+
+            # Inject results in storage structure #
+            rsync $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff $SRM_IO_OPOS/${SRM_IO_POSE}_$SRM_TILE.tiff
 
         done
 
