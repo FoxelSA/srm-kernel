@@ -187,47 +187,50 @@
         SRM_XML_TAG06="CORRECTION_PARAMETERS.sourcePath"
         SRM_XML_TAG07="CORRECTION_PARAMETERS.sourcePaths"
 
+        # Compose edited XML configuration file path #
+        SRM_XML_PATH=$SRM_TMP_NAME/elphel-correction.xml
+
         # Creating edited XML configuration file #
-        > $2; while read SRM_LINE; do
+        > $SRM_XML_PATH; while read SRM_LINE; do
 
             # Detects specific keys #
             if [[ $SRM_LINE == *$SRM_XML_TAG01* ]]; then
 
                 # Export XML entry #
-                echo "<entry key=\"$SRM_XML_TAG01\">$3/calibration/kernels/smooth</entry>" >> $2
+                echo "<entry key=\"$SRM_XML_TAG01\">$SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/calibration/kernels/smooth</entry>" >> $SRM_XML_PATH
 
             elif [[ $SRM_LINE == *$SRM_XML_TAG02* ]]; then
 
                 # Export XML entry #
-                echo "<entry key=\"$SRM_XML_TAG02\">$3/calibration/kernels/sharp</entry>" >> $2
+                echo "<entry key=\"$SRM_XML_TAG02\">$SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/calibration/kernels/sharp</entry>" >> $SRM_XML_PATH
 
             elif [[ $SRM_LINE == *$SRM_XML_TAG03* ]]; then
 
                 # Export XML entry #
-                echo "<entry key=\"$SRM_XML_TAG03\">$3/calibration/sensors</entry>" >> $2
+                echo "<entry key=\"$SRM_XML_TAG03\">$SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/calibration/sensors</entry>" >> $SRM_XML_PATH
 
             elif [[ $SRM_LINE == *$SRM_XML_TAG04* ]]; then
 
                 # Export XML entry #
-                echo "<entry key=\"$SRM_XML_TAG04\">$3/calibration/maps</entry>" >> $2
+                echo "<entry key=\"$SRM_XML_TAG04\">$SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/calibration/maps</entry>" >> $SRM_XML_PATH
 
             elif [[ $SRM_LINE == *$SRM_XML_TAG05* ]]; then
 
                 # Export XML entry #
-                echo "<entry key=\"$SRM_XML_TAG05\">$SRM_TMP_NAME</entry>" >> $2
+                echo "<entry key=\"$SRM_XML_TAG05\">$SRM_TMP_NAME</entry>" >> $SRM_XML_PATH
 
             elif [[ $SRM_LINE == *"THREADS_MAX"* ]]; then
 
                 # Export XML entry #
-                echo "<entry key=\"THREADS_MAX\">$SRM_PLL_CONF</entry>" >> $2
+                echo "<entry key=\"THREADS_MAX\">$SRM_PLL_CONF</entry>" >> $SRM_XML_PATH
 
             elif [[ $SRM_LINE == *"</properties>"* ]]; then
 
                 # Inserting source file in configuration #
-                SRM_LS_NUMS=0; for SRM_LS_FILE in $4/*.jp4; do
+                SRM_LS_NUMS=0; for SRM_LS_FILE in $SRM_IO_IPOS/*.jp4; do
 
                     # Export XML entry #
-                    echo "<entry key=\"${SRM_XML_TAG06}${SRM_LS_NUMS}\">$SRM_LS_FILE</entry>" >> $2
+                    echo "<entry key=\"${SRM_XML_TAG06}${SRM_LS_NUMS}\">$SRM_LS_FILE</entry>" >> $SRM_XML_PATH
 
                     # Update index #
                     SRM_LS_NUMS=$(( $SRM_LS_NUMS + 1 ))
@@ -235,22 +238,22 @@
                 done
 
                 # Export XML entry #
-                echo "<entry key=\"$SRM_XML_TAG07\">$SRM_LS_NUMS</entry>" >> $2
+                echo "<entry key=\"$SRM_XML_TAG07\">$SRM_LS_NUMS</entry>" >> $SRM_XML_PATH
 
                 # Export XML entry #
-                echo $SRM_LINE >> $2
+                echo $SRM_LINE >> $SRM_XML_PATH
 
             elif [[ ! $SRM_LINE == *$SRM_XML_TAG06* ]]; then
 
                 # Export XML entry #
-                echo $SRM_LINE >> $2
+                echo $SRM_LINE >> $SRM_XML_PATH
 
             fi
 
-        done < $1
+        done < $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/imagej-elphel/prefs.xml
 
         # Elphel plugin #
-        ImageJ-linux64 --headless --mem 7150m --run Eyesis_Correction prefs=$2 &> /dev/null
+        ImageJ-linux64 --headless --mem 7150m --run Eyesis_Correction prefs=$SRM_XML_PATH &> /dev/null
 
         # Parsing result image #
         for SRM_EXE_FILE in $SRM_TMP_NAME/*.tiff; do
@@ -312,7 +315,7 @@
         done
 
         # Inject results in storage structure #
-        rsync $SRM_TMP_NAME/*.tiff $5/
+        rsync $SRM_TMP_NAME/*.tiff $SRM_IO_OPOS/
 
     }
 
@@ -366,7 +369,7 @@
                     mkdir -p $SRM_IO_OPOS
 
                     # Refinement process #
-                    srm_elphel_plugin $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/imagej-elphel/prefs.xml $SRM_TMP_NAME/elphel-correction.xml $SRM_MNT_BASE/camera/${SRM_IO_PART[2]} $SRM_IO_IPOS $SRM_IO_OPOS
+                    srm_elphel_plugin
 
                     # Temporary storage #
                     srm_tmpfs delete
