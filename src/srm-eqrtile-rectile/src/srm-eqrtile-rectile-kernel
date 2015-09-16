@@ -170,6 +170,9 @@
 
 # Module kernel specific function (norama@eyesis4pi)
 #
+# This function computes the rectilinear projection of the sensors image coming
+# from an Elphel Eyesis4pi camera based on the equirectangular mappings of the
+# sensors image.
 
     function srm_norama_eyesis4pi() {
 
