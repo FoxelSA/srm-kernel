@@ -176,58 +176,68 @@
 # this basis it extract the channels image and apply the required symetries
 # according to the calibration data.
 
-    function srm_channels_eyesis4pi() {
+    function srm_dcraw_eyesis4pi() {
 
-        # Check module index #
-        if (( $1 == 9 )); then
+        # Parsing device modules #
+        for SRM_IDX_MOD in $(seq 1 $(srm_askc ${SRM_IO_PART[2]} "modules")); do
 
-            # Create channels array #
-            SRM_LIST="24 25"
+            # Copy source file to temporary storage #
+            cp -L $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_IDX_MOD.jp4 $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MOD.jp4
 
-        else
+            # Convert jp4 source file to adobe format #
+            movie2dng --no-dng-rotation --dng $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MOD.jp4 &>/dev/null
 
-            # Create channels array #
-            SRM_LIST="$(printf '%02d' $(($1-1))) $(printf '%02d' $(($1+7))) $(printf '%02d' $(($1+15)))"
+            # Debayer source image #
+            dcraw -q 3 -T $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MOD.dng &>/dev/null
 
-        fi
+            # Remove EXIF information from module image #
+            #exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX_MOD.tiff &>/dev/null
 
-        # Initialize loop index #
-        SRM_INDX=0
+            # Convert module index to channles list #
+            if (( $SRM_IDX_MOD == 9 )); then
 
-        # Parsing channels array #
-        for SRM_CHAN in $SRM_LIST; do
+                # Compose module channels array #
+                SRM_CHN_LIST="24 25"
 
-            # Reset convert configuration option #
-            SRM_FLIP=""
+            else
+            
+                # Compose module channels array #
+                SRM_CHN_LIST="$(printf '%02d' $(($1-1))) $(printf '%02d' $(($1+7))) $(printf '%02d' $(($1+15)))"
 
-            # Compute channel crop rectangle #
-            SRM_CRPW=$(srm_askc $2 "pixelCorrectionWidth_$SRM_CHAN" )
-            SRM_CRPH=$(srm_askc $2 "pixelCorrectionHeight_$SRM_CHAN")
-            SRM_CRPX=0
-            SRM_CRPY=$(( $SRM_INDX * ( ${SRM_CRPH} + 16 ) ))
+            fi
 
-            # Crop channel rectangle #
-            convert $SRM_TMP_NAME/${3}_$1.tiff -crop ${SRM_CRPW}x${SRM_CRPH}+${SRM_CRPX}+${SRM_CRPY} $SRM_TMP_NAME/${3}_${SRM_CHAN}_channel.tiff &>/dev/null
+            # Module channels extraction #
+            SRM_CHN_INDX=0; for SRM_IDX_CHAN in $SRM_CHN_LIST; do
 
-            # Remove EXIF information from channel image #
-            exiv2 rm $SRM_TMP_NAME/${3}_${SRM_CHAN}_channel.tiff &>/dev/null
+                # Compute channel image rectangle #
+                SRM_CHN_CRPW=$(srm_askc $2 "pixelCorrectionWidth_$SRM_IDX_CHAN" )
+                SRM_CHN_CRPW=$(srm_askc $2 "pixelCorrectionHeight_$SRM_IDX_CHAN")
+                SRM_CHN_CRPX=0
+                SRM_CHN_CRPY=$(( $SRM_CHN_INDX * ( ${SRM_CHN_CRPW} + 16 ) ))
 
-            # Compute channel symetries #
-            SRM_SYMH=$(srm_askc $2 "hflip_$SRM_CHAN")
-            SRM_SYMV=$(srm_askc $2 "vflip_$SRM_CHAN")
+                # Extract channel image rectangle #
+                convert $SRM_TMP_NAME/${3}_$1.tiff -crop ${SRM_CHN_CRPW}x${SRM_CHN_CRPW}+${SRM_CHN_CRPX}+${SRM_CHN_CRPY} $SRM_TMP_NAME/${3}_${SRM_IDX_CHAN}_channel.tiff &>/dev/null
 
-            # Compose convert configuration variable #
-            if (( $SRM_SYMH == 1 )); then SRM_FLIP="$SRM_FLIP -flop"; fi
-            if (( $SRM_SYMV == 1 )); then SRM_FLIP="$SRM_FLIP -flip"; fi
+                # Remove EXIF information from channel image #
+                #exiv2 rm $SRM_TMP_NAME/${3}_${SRM_IDX_CHAN}_channel.tiff &>/dev/null
 
-            # Apply channel symetries #
-            convert $SRM_FLIP $SRM_TMP_NAME/${3}_${SRM_CHAN}_channel.tiff $SRM_TMP_NAME/${3}_${SRM_CHAN}.tiff &>/dev/null
+                # Reset channel image symetry descriptor #
+                SRM_CHN_FLIP=""
 
-            # Inject result in storage structure #
-            rsync $SRM_TMP_NAME/${3}_${SRM_CHAN}.tiff $SRM_IO_OPOS/${3}_${SRM_CHAN}.tiff
+                # Create channel image symetry descriptor #
+                if (( $(srm_askc $2 "hflip_$SRM_IDX_CHAN") == 1 )); then SRM_CHN_FLIP="$SRM_CHN_FLIP -flop"; fi
+                if (( $(srm_askc $2 "vflip_$SRM_IDX_CHAN") == 1 )); then SRM_CHN_FLIP="$SRM_CHN_FLIP -flip"; fi
 
-            # Update loop index #
-            SRM_INDX=$(( $SRM_INDX + 1 ))
+                # Compute channel image symetries #
+                convert $SRM_CHN_FLIP $SRM_TMP_NAME/${3}_${SRM_IDX_CHAN}_channel.tiff $SRM_TMP_NAME/${3}_${SRM_IDX_CHAN}.tiff &>/dev/null
+
+                # Inject result in storage structure #
+                rsync $SRM_TMP_NAME/${3}_${SRM_IDX_CHAN}.tiff $SRM_IO_OPOS/${3}_${SRM_IDX_CHAN}.tiff
+
+                # Update loop index #
+                SRM_CHN_INDX=$(( $SRM_CHN_INDX + 1 ))
+
+            done
 
         done
 
@@ -282,28 +292,8 @@
                     # Create destination directory #
                     mkdir -p $SRM_IO_OPOS
 
-                    # Retrieve device calibration #
-                    SRM_MODS=$(srm_askc ${SRM_IO_PART[2]} "modules")
-
-                    # Retrieve number of modules #
-                    for SRM_IDX in $(seq 1 $SRM_MODS); do
-
-                        # Move source file to temporary storage #
-                        cp -L $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_IDX.jp4 $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.jp4
-
-                        # Convert jp4 source file to adobe format #
-                        movie2dng --no-dng-rotation --dng $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.jp4 &>/dev/null
-
-                        # Apply debayer on source image #
-                        dcraw -q 3 -T $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.dng &>/dev/null
-
-                        # Remove EXIF information from module image #
-                        exiv2 rm $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_IDX.tiff &>/dev/null
-
-                        # Process channels #
-                        srm_channels_eyesis4pi $SRM_IDX ${SRM_IO_PART[2]} $SRM_IO_POSE
-
-                    done
+                    # Refinement process #
+                    srm_dcraw_eyesis4pi
 
                     # Temporary storage #
                     srm_tmpfs delete
