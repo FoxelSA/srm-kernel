@@ -179,26 +179,26 @@
     function srm_norama_eyesis4pi() {
 
         # Parsing source files #
-        for SRM_TILE in $(seq -f '%02g' 0 $(( $(srm_askc $1 "channels") - 1 ))); do
+        for SRM_TILE in $(seq -f '%02g' 0 $(( $(srm_askc ${SRM_IO_PART[2]} "channels") - 1 ))); do
 
             # Retrieve mapping size #
-            SRM_WMAP=$(srm_askc $1 "ImageFullWidth_$SRM_TILE" )
-            SRM_HMAP=$(srm_askc $1 "ImageFullLength_$SRM_TILE")
+            SRM_WMAP=$(srm_askc ${SRM_IO_PART[2]} "ImageFullWidth_$SRM_TILE" )
+            SRM_HMAP=$(srm_askc ${SRM_IO_PART[2]} "ImageFullLength_$SRM_TILE")
 
             # Retrieve tile size #
-            SRM_WTIL=$(srm_askc $1 "equirectangularWidth_$SRM_TILE" )
-            SRM_HTIL=$(srm_askc $1 "equirectangularHeight_$SRM_TILE")
+            SRM_WTIL=$(srm_askc ${SRM_IO_PART[2]} "equirectangularWidth_$SRM_TILE" )
+            SRM_HTIL=$(srm_askc ${SRM_IO_PART[2]} "equirectangularHeight_$SRM_TILE")
 
             # Retrieve tile position #
-            SRM_XPOS=$(srm_askc $1 "XPosition_$SRM_TILE")
-            SRM_YPOS=$(srm_askc $1 "YPosition_$SRM_TILE")
+            SRM_XPOS=$(srm_askc ${SRM_IO_PART[2]} "XPosition_$SRM_TILE")
+            SRM_YPOS=$(srm_askc ${SRM_IO_PART[2]} "YPosition_$SRM_TILE")
             SRM_0POS=0
 
             # Retrieve projection angles #
-            SRM_AZIM=$(srm_askc $1 "azimuth_$SRM_TILE"  ); SRM_AZIM=${SRM_AZIM//+}; SRM_AZIM=$(echo "(${SRM_AZIM/[eE]/*10^})*(180/3.1415926535)" | bc -l)
-            SRM_HEAD=$(srm_askc $1 "heading_$SRM_TILE"  ); SRM_HEAD=${SRM_HEAD//+}; SRM_HEAD=$(echo "(${SRM_HEAD/[eE]/*10^})*(180/3.1415926535)" | bc -l)
-            SRM_ELEV=$(srm_askc $1 "elevation_$SRM_TILE"); SRM_ELEV=${SRM_ELEV//+}; SRM_ELEV=$(echo "(${SRM_ELEV/[eE]/*10^})*(180/3.1415926535)" | bc -l)
-            SRM_ROLL=$(srm_askc $1 "roll_$SRM_TILE"     ); SRM_ROLL=${SRM_ROLL//+}; SRM_ROLL=$(echo "(${SRM_ROLL/[eE]/*10^})*(180/3.1415926535)" | bc -l)
+            SRM_AZIM=$(srm_askc ${SRM_IO_PART[2]} "azimuth_$SRM_TILE"  ); SRM_AZIM=${SRM_AZIM//+}; SRM_AZIM=$(echo "(${SRM_AZIM/[eE]/*10^})*(180/3.1415926535)" | bc -l)
+            SRM_HEAD=$(srm_askc ${SRM_IO_PART[2]} "heading_$SRM_TILE"  ); SRM_HEAD=${SRM_HEAD//+}; SRM_HEAD=$(echo "(${SRM_HEAD/[eE]/*10^})*(180/3.1415926535)" | bc -l)
+            SRM_ELEV=$(srm_askc ${SRM_IO_PART[2]} "elevation_$SRM_TILE"); SRM_ELEV=${SRM_ELEV//+}; SRM_ELEV=$(echo "(${SRM_ELEV/[eE]/*10^})*(180/3.1415926535)" | bc -l)
+            SRM_ROLL=$(srm_askc ${SRM_IO_PART[2]} "roll_$SRM_TILE"     ); SRM_ROLL=${SRM_ROLL//+}; SRM_ROLL=$(echo "(${SRM_ROLL/[eE]/*10^})*(180/3.1415926535)" | bc -l)
 
             # Compute inverted gnomonic projection #
             norama-invert -E -i $SRM_IO_IPOS/${SRM_IO_POSE}_$SRM_TILE.tiff -o $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff \
@@ -208,19 +208,19 @@
             --eqr-height $SRM_HTIL \
             --map-width  $SRM_WMAP \
             --map-height $SRM_HMAP \
-            --sight-x    $(srm_askc $1 "px0_$SRM_TILE") \
-            --sight-y    $(srm_askc $1 "py0_$SRM_TILE") \
+            --sight-x    $(srm_askc ${SRM_IO_PART[2]} "px0_$SRM_TILE") \
+            --sight-y    $(srm_askc ${SRM_IO_PART[2]} "py0_$SRM_TILE") \
             --tile-x     $SRM_XPOS \
             --tile-y     $SRM_YPOS \
             --azimuth    $SRM_AZIM \
             --heading    $SRM_HEAD \
             --elevation  $SRM_ELEV \
             --roll       $SRM_ROLL \
-            --focal      $(srm_askc $1 "focalLength_$SRM_TILE") \
-            --pixel      $(srm_askc $1 "pixelSize_$SRM_TILE")
+            --focal      $(srm_askc ${SRM_IO_PART[2]} "focalLength_$SRM_TILE") \
+            --pixel      $(srm_askc ${SRM_IO_PART[2]} "pixelSize_$SRM_TILE")
 
             # Insert alpha channel #
-            convert $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff $SRM_MNT_BASE/camera/$1/calibration/masks/mask-$SRM_TILE.tiff -compose copyopacity -composite $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff
+            convert $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff $SRM_MNT_BASE/camera/${SRM_IO_PART[2]}/calibration/masks/mask-$SRM_TILE.tiff -compose copyopacity -composite $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff
 
             # Inject results in storage structure #
             rsync $SRM_TMP_NAME/${SRM_IO_POSE}_$SRM_TILE.tiff $SRM_IO_OPOS/${SRM_IO_POSE}_$SRM_TILE.tiff
@@ -310,7 +310,7 @@
                     mkdir -p $SRM_IO_OPOS
 
                     # Refinement process #
-                    srm_norama_eyesis4pi ${SRM_IO_PART[2]}
+                    srm_norama_eyesis4pi
 
                     # Temporary storage #
                     srm_tmpfs delete
