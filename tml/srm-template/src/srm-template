@@ -392,7 +392,7 @@
                     srm_echo "SRM Kernel : poses processing"
 
                     # Kernel script call #
-                    parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
+                    parallel --will-cite --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
 
                 else
 
