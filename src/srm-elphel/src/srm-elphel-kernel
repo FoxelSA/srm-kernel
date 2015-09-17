@@ -165,6 +165,30 @@
 
     }
 
+# Module kernel specific function
+#
+# This function is used to inject validated poses coming from Elphel digitising
+# devices in the standard storage structure. It simply creates soft links to the
+# validated poses in the raw data storage structure.
+
+    function srm_inject_elphel() {
+
+        # Initialize device module parser #
+        SRM_IDX_MODE=1
+
+        # Parses device modules #
+        while [ -f ${SRM_IO_IPOS}_${SRM_IDX_MODE}.jp4 ]; do
+
+            # Create soft link #
+            ln -sf ${SRM_IO_IPOS}_${SRM_IDX_MODE}.jp4 $SRM_IO_OPOS/
+
+            # Update index #
+            SRM_IDX_MODE=$(( $SRM_IDX_MODE + 1 ))
+
+        done        
+
+    }
+
 # Module kernel function
 #
 # The kernel function is responsible of analyzing instructions provided by the
@@ -210,19 +234,8 @@
                 # Create destination pose directory #
                 mkdir -p $SRM_IO_OPOS
 
-                # Initialize motherboards #
-                SRM_IO_MODE=1
-
-                # Parses device modules #
-                while [ -f ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 ]; do
-
-                    # Create soft link #
-                    ln -sf ${SRM_IO_IPOS}_${SRM_IO_MODE}.jp4 $SRM_IO_OPOS/
-
-                    # Update index #
-                    SRM_IO_MODE=$(( $SRM_IO_MODE + 1 ))
-
-                done
+                # Refinement process #
+                srm_inject_elphel
 
             fi
 
