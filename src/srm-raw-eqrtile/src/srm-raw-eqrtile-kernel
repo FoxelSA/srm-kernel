@@ -172,9 +172,9 @@
 #
 # This function implements the Elphel plugin call to perform refinement of the
 # data considered by the module. It starts by editing the configuration file in
-# order to specify the correct path befor to call the plugin. It ends its task
-# by renaming the output files and by merging tile that are provided in two
-# parts by the Elphel plugin.
+# order to specify the correct path before to call the plugin. It ends its task
+# by renaming the output files and by merging the tiles that are provided in two
+# parts by the plugin.
 
     function srm_elphel_plugin() {
 

@@ -171,7 +171,7 @@
 # Module kernel specific function (channel-extraction@eyesis4pi)
 #
 # This function is responsible of the camera channels image extraction on the
-# basis of the composite raw image coming from camera modules. Channel images
+# basis of the composite raw image coming from Eysis4pi device. Channel images
 # are extracted from module images on the basis of the calibration data and
 # symetries are applied to retrieve the original channel images.
 

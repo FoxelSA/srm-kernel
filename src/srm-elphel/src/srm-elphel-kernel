@@ -165,7 +165,7 @@
 
     }
 
-# Module kernel specific function
+# Module kernel specific function (ln@elphel)
 #
 # This function is used to inject validated poses coming from Elphel digitising
 # devices in the standard storage structure. It simply creates soft links to the

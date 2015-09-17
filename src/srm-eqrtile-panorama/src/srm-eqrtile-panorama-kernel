@@ -172,7 +172,7 @@
 #
 # This function implements the enblend stitching procedure using source data
 # coming from an Eyesis4Pi camera device. It simply stitches the upper, middle
-# and downer band befor to stitch the band together.
+# and downer bands before to stitch the three band together.
 
     function srm_enblend_eysis4pi() {
 
