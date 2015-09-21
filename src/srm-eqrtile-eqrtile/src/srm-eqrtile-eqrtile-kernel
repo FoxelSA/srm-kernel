@@ -190,17 +190,27 @@
         done
 
         # Check histogram correction mode #
-        if [ "$1" == "mean"]; then
+        if [ "$1" == "mean" ]; then
 
             # Initialize mean computation #
-            SRM_EXE_COMP="("
+            SRM_EXE_COMP="scale=4;("
             SRM_EXE_NUMB=0
 
             # Composing mean computation #
             for SRM_EXE_ELEM in $SRM_EXE_MEAN; do
 
-                # Append element #
-                SRM_EXE_COMP="$SRM_EXE_COMP + $SRM_EXE_ELEM"
+                # Avoid initial operator #
+                if (( $SRM_EXE_NUMB == 0 )); then
+
+                    # Append element #
+                    SRM_EXE_COMP="$SRM_EXE_COMP $SRM_EXE_ELEM"
+
+                else
+
+                    # Append element #
+                    SRM_EXE_COMP="$SRM_EXE_COMP + $SRM_EXE_ELEM"
+
+                fi
 
                 # Increment counter #
                 SRM_EXE_NUMB=$(( $SRM_EXE_NUMB + 1 ))
@@ -208,20 +218,30 @@
             done
 
             # Finalize mean computation #
-            SRM_EXE_COMP=") / $SRM_EXE_NUMB"
+            SRM_EXE_COMP="$SRM_EXE_COMP) / $SRM_EXE_NUMB"
 
             # Compute mean value #
-            SRM_EXE_MEND=$(echo $SRM_EXE_COMP | bc -l)
+            SRM_EXE_MEND=$(echo "$SRM_EXE_COMP" | bc -l)
 
             # Initialize mean computation #
-            SRM_EXE_COMP="("
+            SRM_EXE_COMP="scale=4;("
             SRM_EXE_NUMB=0
 
             # Composing mean computation #
             for SRM_EXE_ELEM in $SRM_EXE_STDD; do
 
-                # Append element #
-                SRM_EXE_COMP="$SRM_EXE_COMP + $SRM_EXE_ELEM"
+                # Avoid initial operator #
+                if (( $SRM_EXE_NUMB == 0 )); then
+
+                    # Append element #
+                    SRM_EXE_COMP="$SRM_EXE_COMP $SRM_EXE_ELEM"
+
+                else
+
+                    # Append element #
+                    SRM_EXE_COMP="$SRM_EXE_COMP + $SRM_EXE_ELEM"
+
+                fi
 
                 # Increment counter #
                 SRM_EXE_NUMB=$(( $SRM_EXE_NUMB + 1 ))
@@ -229,10 +249,10 @@
             done
 
             # Finalize mean computation #
-            SRM_EXE_COMP=") / $SRM_EXE_NUMB"
+            SRM_EXE_COMP="$SRM_EXE_COMP) / $SRM_EXE_NUMB"
 
             # Compute mean value #
-            SRM_EXE_SEND=$(echo $SRM_EXE_COMP | bc -l)
+            SRM_EXE_SEND=$(echo "$SRM_EXE_COMP" | bc -l)
 
             # Processing equirectangular tiles #
             for SRM_EXE_POSE in $SRM_IO_IPOS/*.tiff; do
@@ -241,7 +261,7 @@
                 SRM_EXE_NAME=$(basename $SRM_EXE_POSE)
 
                 # Histogram correction #
-                feature-image-expose --input $SRM_EXE_POSE --output $SRM_IO_OPOS/$SRM_EXE_NAME --set -m $SRM_EXE_MEND -s $SRM_EXE_SEND
+                feature-image-expose --input $SRM_EXE_POSE --output $SRM_IO_OPOS/$SRM_EXE_NAME --set -m $SRM_EXE_MEND -s $SRM_EXE_SEND &> /dev/null
 
             done
 
