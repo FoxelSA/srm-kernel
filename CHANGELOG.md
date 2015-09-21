@@ -1,5 +1,9 @@
 ## Changelog
 
+### Bete 0.3.2
+
+- `Fixed` : Classification analysis for available node listing
+
 ### Release 0.3.1 (September 17, 2015)
 
 - `Added` : **srm-eqrtile-rectile** equirectangular to rectilinear tile
