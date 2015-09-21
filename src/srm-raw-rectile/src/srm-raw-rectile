@@ -337,7 +337,7 @@
         else
 
             # Check source classification #
-            if [[ ! "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/info/class-output)" == *"$SRM_IO_ICLASS"* ]]; then
+            if [ "$(cat $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/info/class-output)" != "$SRM_IO_ICLASS" ]; then
 
                 # Display message and update exit code #
                 srm_echo "SRM Kernel : Error, invalid source classification"; SRM_SIG_EXIT=1
@@ -411,7 +411,7 @@
         for SRM_NOD_INPUT in $SRM_MNT_BASE/pose/*; do
 
             # Check the node input classification #
-            if [ -e $SRM_NOD_INPUT/info/class-output ] && [[ "$(cat $SRM_NOD_INPUT/info/class-output)" == *"$SRM_IO_ICLASS"* ]]; then
+            if [ -e $SRM_NOD_INPUT/info/class-output ] && [ "$(cat $SRM_NOD_INPUT/info/class-output)" == "$SRM_IO_ICLASS" ]; then
 
                 # Display source node #
                 srm_echo "$(basename $SRM_NOD_INPUT)"

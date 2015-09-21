@@ -396,7 +396,7 @@
         for SRM_NOD_INPUT in $SRM_MNT_BASE/pose/*; do
 
             # Check the node input classification #
-            if [ -e $SRM_NOD_INPUT/info/class-output ] && [[ "$(cat $SRM_NOD_INPUT/info/class-output)" == *"$SRM_IO_ICLASS"* ]]; then
+            if [ -e $SRM_NOD_INPUT/info/class-output ] && [ "$(cat $SRM_NOD_INPUT/info/class-output)" == "$SRM_IO_ICLASS" ]; then
 
                 # Display source node #
                 srm_echo "$(basename $SRM_NOD_INPUT)"
