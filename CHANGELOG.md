@@ -2,7 +2,6 @@
 
 ### Bete 0.3.2
 
-- `Added` : Multiple input classification
 - `Fixed` : Classification analysis for available node listing
 
 ### Release 0.3.1 (September 17, 2015)
