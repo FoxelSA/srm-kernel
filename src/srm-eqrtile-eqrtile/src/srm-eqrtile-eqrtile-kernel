@@ -263,6 +263,9 @@
                 # Histogram correction #
                 feature-image-expose --input $SRM_EXE_POSE --output $SRM_IO_OPOS/$SRM_EXE_NAME --set -m $SRM_EXE_MEND -s $SRM_EXE_SEND &> /dev/null
 
+                # Copy EXIF information #
+                exiftool -TagsFromFile $SRM_EXE_POSE $SRM_IO_OPOS/$SRM_EXE_NAME &> /dev/null
+
             done
 
         fi
