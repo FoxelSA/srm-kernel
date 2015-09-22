@@ -181,11 +181,7 @@
         for SRM_EXE_POSE in $SRM_IO_IPOS/*.tiff; do
 
             # Computing histogram mean and standard deviation #
-            SRM_EXE_HIST=($(feature-image-expose --input $SRM_EXE_POSE --get))
-
-            # Appending histogram values #
-            SRM_EXE_MEAN="$SRM_EXE_MEAN ${SRM_EXE_HIST[0]}"
-            SRM_EXE_STDD="$SRM_EXE_MEAN ${SRM_EXE_HIST[1]}"
+            SRM_EXE_MEAN="$SRM_EXE_MEAN $(feature-image-expose --input $SRM_EXE_POSE --get --mode mean)"
 
         done
 
@@ -223,37 +219,6 @@
             # Compute mean value #
             SRM_EXE_MEND=$(echo "$SRM_EXE_COMP" | bc -l)
 
-            # Initialize mean computation #
-            SRM_EXE_COMP="scale=4;("
-            SRM_EXE_NUMB=0
-
-            # Composing mean computation #
-            for SRM_EXE_ELEM in $SRM_EXE_STDD; do
-
-                # Avoid initial operator #
-                if (( $SRM_EXE_NUMB == 0 )); then
-
-                    # Append element #
-                    SRM_EXE_COMP="$SRM_EXE_COMP $SRM_EXE_ELEM"
-
-                else
-
-                    # Append element #
-                    SRM_EXE_COMP="$SRM_EXE_COMP + $SRM_EXE_ELEM"
-
-                fi
-
-                # Increment counter #
-                SRM_EXE_NUMB=$(( $SRM_EXE_NUMB + 1 ))
-
-            done
-
-            # Finalize mean computation #
-            SRM_EXE_COMP="$SRM_EXE_COMP) / $SRM_EXE_NUMB"
-
-            # Compute mean value #
-            SRM_EXE_SEND=$(echo "$SRM_EXE_COMP" | bc -l)
-
             # Processing equirectangular tiles #
             for SRM_EXE_POSE in $SRM_IO_IPOS/*.tiff; do
 
@@ -261,10 +226,17 @@
                 SRM_EXE_NAME=$(basename $SRM_EXE_POSE)
 
                 # Histogram correction #
-                feature-image-expose --input $SRM_EXE_POSE --output $SRM_IO_OPOS/$SRM_EXE_NAME --set -m $SRM_EXE_MEND -s $SRM_EXE_SEND &> /dev/null
+                feature-image-expose --input $SRM_EXE_POSE --output $SRM_TMP_NAME/$SRM_EXE_NAME --set -m $SRM_EXE_MEND -d mean &> /dev/null
+
+                # Reinserting alpha component #
+                convert -alpha extract $SRM_EXE_POSE $SRM_TMP_NAME/alpha-layer.tiff &> /dev/null
+                convert $SRM_TMP_NAME/$SRM_EXE_NAME $SRM_TMP_NAME/alpha-layer.tiff -compose copyopacity -composite $SRM_TMP_NAME/$SRM_EXE_NAME &> /dev/null
 
                 # Copy EXIF information #
-                exiftool -TagsFromFile $SRM_EXE_POSE $SRM_IO_OPOS/$SRM_EXE_NAME &> /dev/null
+                exiftool -TagsFromFile $SRM_EXE_POSE $SRM_TMP_NAME/$SRM_EXE_NAME -overwrite_original &> /dev/null
+
+                # Inject results in storage structure #
+                rsync $SRM_TMP_NAME/$SRM_EXE_NAME $SRM_IO_OPOS/$SRM_EXE_NAME
 
             done
 
