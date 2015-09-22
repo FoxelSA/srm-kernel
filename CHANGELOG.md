@@ -1,6 +1,6 @@
 ## Changelog
 
-### Bete 0.3.2
+### Beta 0.3.2
 
 - `Fixed` : Classification analysis for available node listing
 
