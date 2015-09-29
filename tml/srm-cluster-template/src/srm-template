@@ -90,14 +90,14 @@
                 --mount-point)
                     SRM_MNT_BASE="$srm_prm"
                 ;;
-                --address)
-                    SRM_MOD_MMSR="$SRM_MOD_MMSR $srm_prm"
-                ;;
                 --display)
                     SRM_MOD_EXEC="$srm_prm"
                 ;;
                 --thread)
                     SRM_PLL_CONF="$srm_prm"
+                ;;
+                -a)
+                    SRM_MOD_MMSR="$srm_prm"
                 ;;
                 -n)
                     SRM_MOD_IHAS="$srm_prm"
@@ -185,30 +185,6 @@
         # Display message #
         >&2 echo "$1"
         
-    }
-
-# Parallel configuration
-#
-# This function establish the configuration of module parallel processing. If
-# a network topology configuration file is provided, it is considered by GNU
-# parallel. Otherwise, the parameter is interpreted as the number of thread to
-# use on the local machine.
-
-    function srm_parallel() {
-
-        # Check for configuration file #
-        if [ -e $SRM_PLL_CONF ]; then
-
-            # Compose parallel command #
-            echo "--sshconfig $SRM_PLL_CONF"
-
-        else
-
-            # Compose parallel command #
-            echo "-j$SRM_PLL_CONF"
-
-        fi
-
     }
 
 # Timestamps selection
@@ -356,7 +332,7 @@
                 srm_echo "SRM Kernel : analysing addresses"
 
                 # Parse mmsr addresses #
-                for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
+                for SRM_EXE_MSSR in ${SRM_MOD_MMSR//,/ }; do
 
                     # Display mmsr address #
                     srm_echo "    analysing $SRM_EXE_MSSR address"
@@ -389,10 +365,13 @@
                 if [ -n "$SRM_PLL_POSE" ]; then
 
                     # Display module processing #
-                    srm_echo "SRM Kernel : poses processing"
+                    srm_echo "SRM Kernel : cluster processing"
 
-                    # Kernel script call #
-                    parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
+                    # Display message #
+                    srm_echo "    processing stage ..."
+
+                    # Processing stage #
+                    # ... #
 
                 else
 
