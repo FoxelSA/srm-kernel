@@ -389,7 +389,7 @@
                 if [ -n "$SRM_PLL_POSE" ]; then
 
                     # Display module processing #
-                    srm_echo "SRM Kernel : poses processing"
+                    srm_echo "SRM Kernel : elements processing"
 
                     # Kernel script call #
                     parallel --ungroup --retries 5 $(srm_parallel) $(basename $0)-kernel $@ --io {} ::: $SRM_PLL_POSE
@@ -397,7 +397,7 @@
                 else
 
                     # Display module processing #
-                    srm_echo "SRM Kernel : poses out of addresses range"
+                    srm_echo "SRM Kernel : elements out of addresses range"
 
                 fi
 

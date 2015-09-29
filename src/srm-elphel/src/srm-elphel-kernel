@@ -220,7 +220,7 @@
     else
 
         # Display message #
-        srm_echo "    rawdata ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
+        srm_echo "    element ${SRM_IO_PART[5]}"
 
         # Check device constructor #
         if [ "$(srm_askc ${SRM_IO_PART[2]} "constructor")" == "elphel" ]; then

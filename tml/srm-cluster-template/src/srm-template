@@ -44,9 +44,12 @@
 
     # Execution variables #
     SRM_MOD_EXEC="default"
+    SRM_KER_FORC="false"
+    SRM_KER_MODE="unknown"
     SRM_MOD_MMSR=""
     SRM_MOD_IHAS=""
     SRM_MOD_OHAS=""
+    SRM_MOD_AHAS=""
 
     # Parallel variables #
     SRM_PLL_POSE=""
@@ -90,14 +93,17 @@
                 --mount-point)
                     SRM_MNT_BASE="$srm_prm"
                 ;;
+                --address)
+                    SRM_MOD_MMSR="$srm_prm"
+                ;;
                 --display)
                     SRM_MOD_EXEC="$srm_prm"
                 ;;
                 --thread)
                     SRM_PLL_CONF="$srm_prm"
                 ;;
-                -a)
-                    SRM_MOD_MMSR="$srm_prm"
+                --force)
+                    SRM_KER_FORC="$srm_prm"
                 ;;
                 -n)
                     SRM_MOD_IHAS="$srm_prm"
@@ -301,6 +307,9 @@
     # Compute module hash #
     SRM_MOD_OHAS=$(echo "$SRM_CMD_HASH" | sha256sum | cut -c 1-16)
 
+    # Compute cluster hash #
+    SRM_MOD_AHAS=$(echo "$SRM_MOD_MMSR" | sha256sum | cut -c 1-16)
+
     # Switch on execution mode #
     if [ "$SRM_MOD_EXEC" == "default" ]; then
 
@@ -376,7 +385,7 @@
                 else
 
                     # Display module processing #
-                    srm_echo "SRM Kernel : poses out of addresses range"
+                    srm_echo "SRM Kernel : elements out of addresses range"
 
                 fi
 

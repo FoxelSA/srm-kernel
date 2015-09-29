@@ -254,7 +254,7 @@
     else
 
         # Display message #
-        srm_echo "    pose ${SRM_IO_PART[5]} of camera ${SRM_IO_PART[2]}"
+        srm_echo "    element ${SRM_IO_PART[5]}"
 
         # Check module mode #
         if [ "$SRM_KER_MODE" == "norama-suite" ]; then
