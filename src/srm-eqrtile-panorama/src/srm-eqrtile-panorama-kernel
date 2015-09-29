@@ -177,7 +177,7 @@
     function srm_enblend_eysis4pi() {
 
         # Local thread configuration #
-        export OMP_NUM_THREADS=$SRM_PLL_CONF
+        export OMP_NUM_THREADS=$(($SRM_PLL_CONF))
 
         # Extract timestamps #
         SRM_EXE_TIME=$(basename $SRM_IO_IPOS); 
