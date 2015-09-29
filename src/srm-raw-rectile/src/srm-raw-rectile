@@ -91,7 +91,7 @@
                     SRM_MNT_BASE="$srm_prm"
                 ;;
                 --address)
-                    SRM_MOD_MMSR="$SRM_MOD_MMSR $srm_prm"
+                    SRM_MOD_MMSR="$srm_prm"
                 ;;
                 --display)
                     SRM_MOD_EXEC="$srm_prm"
@@ -356,7 +356,7 @@
                 srm_echo "SRM Kernel : analysing addresses"
 
                 # Parse mmsr addresses #
-                for SRM_EXE_MSSR in $SRM_MOD_MMSR; do
+                for SRM_EXE_MSSR in ${SRM_MOD_MMSR//,/ }; do
 
                     # Display mmsr address #
                     srm_echo "    analysing $SRM_EXE_MSSR address"
