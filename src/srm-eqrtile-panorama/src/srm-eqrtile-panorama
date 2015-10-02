@@ -396,8 +396,8 @@
 
                 else
 
-                    # Display module processing #
-                    srm_echo "SRM Kernel : elements missing in addresses"
+                    # Display message and update exit code #
+                    srm_echo "SRM Kernel : elements out of addresses range"; SRM_SIG_EXIT==1
 
                 fi
 
