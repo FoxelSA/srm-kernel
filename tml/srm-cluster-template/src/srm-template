@@ -44,8 +44,8 @@
 
     # Execution variables #
     SRM_MOD_EXEC="default"
-    SRM_KER_FORC="false"
-    SRM_KER_MODE="unknown"
+    SRM_MOD_FORC="false"
+    SRM_MOD_MODE="unknown"
     SRM_MOD_MMSR=""
     SRM_MOD_IHAS=""
     SRM_MOD_OHAS=""
@@ -103,10 +103,13 @@
                     SRM_PLL_CONF="$srm_prm"
                 ;;
                 --force)
-                    SRM_KER_FORC="$srm_prm"
+                    SRM_MOD_FORC="$srm_prm"
                 ;;
                 -n)
                     SRM_MOD_IHAS="$srm_prm"
+                ;;
+                -m)
+                    SRM_MOD_MODE="$srm_prm"
                 ;;
 
             esac
@@ -279,19 +282,80 @@
         SRM_NOD_INFO="$(date +"%d.%m.%Y@%T(%z)") $USER@$HOSTNAME \$ $SRM_CMD_NORM"
 
         # Create/update node directories #
-        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS
-        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info
-        mkdir -p $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/data
+        mkdir -p $SRM_MNT_BASE/cluster/$SRM_MOD_OHAS
+        mkdir -p $SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/info
+        mkdir -p $SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/data
 
         # Create/update node information #
-        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/class-output
-        echo $SRM_IO_ICLASS > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/class-input
-        echo $SRM_MOD_OHAS  > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/hash-output
-        echo $SRM_MOD_IHAS  > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/hash-input
-        echo $SRM_CMD_HASH  > $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command-hash
+        echo $SRM_IO_OCLASS > $SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/info/class-output
+        echo $SRM_IO_ICLASS > $SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/info/class-input
+        echo $SRM_MOD_OHAS  > $SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/info/hash-output
+        echo $SRM_MOD_IHAS  > $SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/info/hash-input
+        echo $SRM_CMD_HASH  > $SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/info/command-hash
 
         # Update node command history #
-        echo "$SRM_NOD_INFO" >> $SRM_MNT_BASE/pose/$SRM_MOD_OHAS/info/command-history
+        echo "$SRM_NOD_INFO" >> $SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/info/command-history
+
+    }
+
+# Timestamps hashing
+#
+# This function returns the hashed (truncated) timestamps value for any given
+# timestamp according to the storage structure standards. It corresponds to a
+# simple division by ten.
+
+    function srm_tshash() {
+
+        # Retrieve unix timestamps #
+        SRM_TS_UNIX=(${1//_/ })
+
+        # Returns hashed timestamps #
+        echo $(( ${SRM_TS_UNIX[0]} / 100 ))
+
+    }
+
+# Temporary file system
+#
+# This function creates a temporary storage (tmpfs) in case module requires
+# fast-access storage. It also allows to delete the temporary storage as the
+# module ends its task.
+
+    function srm_tmpfs() {
+
+        # Create temporary storage path #
+        SRM_TMP_NAME=/run/shm/$(echo "$SRM_IO_PATH" | sha256sum | cut -c 1-32)
+
+        # Temporary storage management #
+        if [ "$1" == "create" ]; then
+
+            # Create temporary storage #
+            mkdir -p $SRM_TMP_NAME
+
+        elif [ "$1" == "delete" ]; then
+
+            # Check temporary storage #
+            if [ -d $SRM_TMP_NAME ]; then
+
+                # Delete temporary storage #
+                rm -rf $SRM_TMP_NAME
+
+            fi
+
+        fi
+
+    }
+
+# Calibration data access
+#
+# This function allows to query calibration data through the standard storage
+# structure. It expects the device MAC address and the key of the desired value
+# and returns it when the key is found in the calibration data. An empty string
+# is return otherwise.
+
+    function srm_askc() {
+
+        # Reads and returns value of key #
+        echo $(grep "$2" $SRM_MNT_BASE/camera/$1/fastcal/calibration.key | cut -d'=' -f2)
 
     }
 
@@ -374,18 +438,59 @@
                 if [ -n "$SRM_PLL_POSE" ]; then
 
                     # Display module processing #
-                    srm_echo "SRM Kernel : cluster processing"
+                    srm_echo "SRM Kernel : elements processing"
 
-                    # Display message #
-                    srm_echo "    processing stage ..."
+                    # Compose destination directory #
+                    SRM_EXE_OPOS=$SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/cluster/$SRM_MOD_AHAS
 
-                    # Processing stage #
-                    # ... #
+                    # Check module mode #
+                    if [ "$SRM_MOD_MODE" == "mode" ]; then
+
+                        # Check pose #
+                        if ( [ -d $SRM_EXE_OPOS ] && [ "$SRM_MOD_FORC" == "true" ] ) || [ ! -d $SRM_EXE_OPOS ]; then
+
+                            # Temporary storage #
+                            srm_tmpfs create
+
+                            # Remove previous data #
+                            if [ -d $SRM_EXE_OPOS ]; then rm -rf $SRM_EXE_OPOS; fi
+
+                            # Display message #
+                            srm_echo "    gathering stage ..."
+
+                            # Parsing source elements #
+                            for SRM_EXE_PATH in SRM_PLL_POSE; do
+
+                                # Decompose IO buffer #
+                                SRM_EXE_PART=(${SRM_EXE_PATH//,/ })
+
+                                # Compose source directory #
+                                SRM_EXE_IPOS=$SRM_MNT_BASE/pose/${SRM_EXE_PART[0]}/data/${SRM_EXE_PART[2]}/master/${SRM_EXE_PART[3]}/segment/${SRM_EXE_PART[4]}/pose/$(srm_tshash ${SRM_EXE_PART[5]})/${SRM_EXE_PART[5]}
+
+                            done
+
+                            # Display message #
+                            srm_echo "    processing stage ..."
+            
+                            # Refinement process #
+                            # ... #
+
+                            # Temporary storage #
+                            srm_tmpfs delete
+
+                        fi
+
+                    else
+
+                        # Display message and update exit code #
+                        srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
+
+                    fi
 
                 else
 
                     # Display module processing #
-                    srm_echo "SRM Kernel : elements out of addresses range"
+                    srm_echo "SRM Kernel : elements out of addresses range"; SRM_SIG_EXIT=1
 
                 fi
 
