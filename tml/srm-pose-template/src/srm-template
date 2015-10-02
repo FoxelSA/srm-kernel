@@ -397,7 +397,7 @@
                 else
 
                     # Display message and update exit code #
-                    srm_echo "SRM Kernel : elements out of addresses range"; SRM_SIG_EXIT==1
+                    srm_echo "SRM Kernel : elements out of addresses range"; SRM_SIG_EXIT=1
 
                 fi
 
@@ -443,5 +443,5 @@
     fi
 
     # Exit code #
-    if [ "$SRM_SIG_EXIT" == "0" ]; then exit 1; else exit 0; fi
+    exit $SRM_SIG_EXIT
 
