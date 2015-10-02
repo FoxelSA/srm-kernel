@@ -455,6 +455,9 @@
                             # Remove previous data #
                             if [ -d $SRM_EXE_OPOS ]; then rm -rf $SRM_EXE_OPOS; fi
 
+                            # Create destination directory #
+                            mkdir -p $SRM_EXE_OPOS; mkdir -p $SRM_EXE_OPOS/sources
+
                             # Display message #
                             srm_echo "    gathering stage ..."
 
@@ -466,6 +469,14 @@
 
                                 # Compose source directory #
                                 SRM_EXE_IPOS=$SRM_MNT_BASE/pose/${SRM_EXE_PART[0]}/data/${SRM_EXE_PART[2]}/master/${SRM_EXE_PART[3]}/segment/${SRM_EXE_PART[4]}/pose/$(srm_tshash ${SRM_EXE_PART[5]})/${SRM_EXE_PART[5]}
+
+                                # Parsing element files #
+                                for SRM_EXE_FILE in $SRM_EXE_IPOS/*; do
+
+                                    # Source data linkage #
+                                    ln -sf $SRM_EXE_FILE $SRM_EXE_OPOS/sources/
+
+                                done
 
                             done
 
