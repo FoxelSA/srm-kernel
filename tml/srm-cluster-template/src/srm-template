@@ -59,7 +59,7 @@
     SRM_SIG_EXIT=0
 
     # Classification variables #
-    SRM_IO_ICLASS="template-module"
+    SRM_IO_ICLASS="panroama"
     SRM_IO_OCLASS="template-module"
 
 # Argument and parameter
@@ -441,7 +441,7 @@
                     srm_echo "SRM Kernel : elements processing"
 
                     # Compose destination directory #
-                    SRM_EXE_OPOS=$SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/cluster/$SRM_MOD_AHAS
+                    SRM_EXE_OPOS=$SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/data/$SRM_MOD_AHAS
 
                     # Check module mode #
                     if [ "$SRM_MOD_MODE" == "mode" ]; then
@@ -456,13 +456,13 @@
                             if [ -d $SRM_EXE_OPOS ]; then rm -rf $SRM_EXE_OPOS; fi
 
                             # Create destination directory #
-                            mkdir -p $SRM_EXE_OPOS; mkdir -p $SRM_EXE_OPOS/sources
+                            mkdir -p $SRM_EXE_OPOS; mkdir -p $SRM_EXE_OPOS/source; mkdir -p $SRM_EXE_OPOS/cluster
 
                             # Display message #
                             srm_echo "    gathering stage ..."
 
                             # Parsing source elements #
-                            for SRM_EXE_PATH in SRM_PLL_POSE; do
+                            for SRM_EXE_PATH in $SRM_PLL_POSE; do
 
                                 # Decompose IO buffer #
                                 SRM_EXE_PART=(${SRM_EXE_PATH//,/ })
@@ -474,7 +474,7 @@
                                 for SRM_EXE_FILE in $SRM_EXE_IPOS/*; do
 
                                     # Source data linkage #
-                                    ln -sf $SRM_EXE_FILE $SRM_EXE_OPOS/sources/
+                                    ln -sf $SRM_EXE_FILE $SRM_EXE_OPOS/source/
 
                                 done
 
@@ -547,5 +547,5 @@
     fi
 
     # Exit code #
-    exit $SRM_SIG_EXIT
+    if [ "$SRM_SIG_EXIT" == "0" ]; then exit 1; else exit 0; fi
 
