@@ -59,7 +59,7 @@
     SRM_SIG_EXIT=0
 
     # Classification variables #
-    SRM_IO_ICLASS="panroama"
+    SRM_IO_ICLASS="panoroama"
     SRM_IO_OCLASS="template-module"
 
 # Argument and parameter
