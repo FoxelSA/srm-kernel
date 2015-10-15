@@ -378,7 +378,8 @@
 
 # Module specific function (enfuse)
 #
-# 
+# This function simply considers all TIFF images provided in the node source
+# directory to compose an HDR panorama using enfuse software.
 
     function srm_enfuse() {
 
