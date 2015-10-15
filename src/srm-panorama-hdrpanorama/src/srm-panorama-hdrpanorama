@@ -386,7 +386,7 @@
         export OMP_NUM_THREADS=$(($SRM_PLL_CONF))
 
         # Composing hdr-panorama #
-        enfuse-mp $SRM_EXE_FILE $SRM_EXE_OPOS/source/*.tiff $SRM_EXE_FILE $SRM_EXE_OPOS/cluster/SRM_MOD_AHAS.tiff &> /dev/null
+        enfuse-mp $SRM_EXE_OPOS/source/*.tiff -o $SRM_EXE_OPOS/cluster/$SRM_MOD_AHAS.tiff &> /dev/null
 
     }
 
