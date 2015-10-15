@@ -376,6 +376,20 @@
 
     }
 
+# Module specific function (enfuse)
+#
+# 
+
+    function srm_enfuse() {
+
+        # Local thread configuration #
+        export OMP_NUM_THREADS=$(($SRM_PLL_CONF))
+
+        # Composing hdr-panorama #
+        enfuse-mp $SRM_EXE_FILE $SRM_EXE_OPOS/source/*.tiff $SRM_EXE_FILE $SRM_EXE_OPOS/cluster/SRM_MOD_AHAS.tiff &> /dev/null
+
+    }
+
 # Module main function
 #
 # The main function is responsible of enumerating the poses that have to be
@@ -461,7 +475,7 @@
                     SRM_EXE_OPOS=$SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/data/$SRM_MOD_AHAS
 
                     # Check module mode #
-                    if [ "$SRM_MOD_MODE" == "mode" ]; then
+                    if [ "$SRM_MOD_MODE" == "enfuse" ]; then
 
                         # Check pose #
                         if ( [ -d $SRM_EXE_OPOS ] && [ "$SRM_MOD_FORC" == "true" ] ) || [ ! -d $SRM_EXE_OPOS ]; then
@@ -499,9 +513,9 @@
 
                             # Display message #
                             srm_echo "    processing stage ..."
-            
+
                             # Refinement process #
-                            # ... #
+                            srm_enfuse
 
                             # Temporary storage #
                             srm_tmpfs delete
