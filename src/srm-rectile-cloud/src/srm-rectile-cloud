@@ -59,8 +59,8 @@
     SRM_SIG_EXIT=0
 
     # Classification variables #
-    SRM_IO_ICLASS="panoroama"
-    SRM_IO_OCLASS="template-module"
+    SRM_IO_ICLASS="rectile"
+    SRM_IO_OCLASS="cloud"
 
 # Argument and parameter
 #
@@ -376,6 +376,13 @@
 
     }
 
+# Module specific function (enfuse)
+#
+
+    function srm_cloud() {
+
+    }
+
 # Module main function
 #
 # The main function is responsible of enumerating the poses that have to be
@@ -495,13 +502,13 @@
                         done
 
                         # Check module mode #
-                        if [ "$SRM_MOD_MODE" == "mode" ]; then
+                        if [ "$SRM_MOD_MODE" == "openmvg" ]; then
 
                             # Display message #
                             srm_echo "    processing stage ..."
-            
+
                             # Refinement process #
-                            # ... #
+                            srm_cloud
 
                         else
 
