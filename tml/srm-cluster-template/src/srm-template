@@ -460,42 +460,42 @@
                     # Compose destination directory #
                     SRM_EXE_OPOS=$SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/data/$SRM_MOD_AHAS
 
-                    # Check module mode #
-                    if [ "$SRM_MOD_MODE" == "mode" ]; then
+                    # Check pose #
+                    if ( [ -d $SRM_EXE_OPOS ] && [ "$SRM_MOD_FORC" == "true" ] ) || [ ! -d $SRM_EXE_OPOS ]; then
 
-                        # Check pose #
-                        if ( [ -d $SRM_EXE_OPOS ] && [ "$SRM_MOD_FORC" == "true" ] ) || [ ! -d $SRM_EXE_OPOS ]; then
+                        # Temporary storage #
+                        srm_tmpfs create
 
-                            # Temporary storage #
-                            srm_tmpfs create
+                        # Remove previous data #
+                        if [ -d $SRM_EXE_OPOS ]; then rm -rf $SRM_EXE_OPOS; fi
 
-                            # Remove previous data #
-                            if [ -d $SRM_EXE_OPOS ]; then rm -rf $SRM_EXE_OPOS; fi
+                        # Create destination directory #
+                        mkdir -p $SRM_EXE_OPOS; mkdir -p $SRM_EXE_OPOS/source; mkdir -p $SRM_EXE_OPOS/cluster
 
-                            # Create destination directory #
-                            mkdir -p $SRM_EXE_OPOS; mkdir -p $SRM_EXE_OPOS/source; mkdir -p $SRM_EXE_OPOS/cluster
+                        # Display message #
+                        srm_echo "    gathering stage ..."
 
-                            # Display message #
-                            srm_echo "    gathering stage ..."
+                        # Parsing source elements #
+                        for SRM_EXE_PATH in $SRM_PLL_POSE; do
 
-                            # Parsing source elements #
-                            for SRM_EXE_PATH in $SRM_PLL_POSE; do
+                            # Decompose IO buffer #
+                            SRM_EXE_PART=(${SRM_EXE_PATH//,/ })
 
-                                # Decompose IO buffer #
-                                SRM_EXE_PART=(${SRM_EXE_PATH//,/ })
+                            # Compose source directory #
+                            SRM_EXE_IPOS=$SRM_MNT_BASE/pose/${SRM_EXE_PART[0]}/data/${SRM_EXE_PART[2]}/master/${SRM_EXE_PART[3]}/segment/${SRM_EXE_PART[4]}/pose/$(srm_tshash ${SRM_EXE_PART[5]})/${SRM_EXE_PART[5]}
 
-                                # Compose source directory #
-                                SRM_EXE_IPOS=$SRM_MNT_BASE/pose/${SRM_EXE_PART[0]}/data/${SRM_EXE_PART[2]}/master/${SRM_EXE_PART[3]}/segment/${SRM_EXE_PART[4]}/pose/$(srm_tshash ${SRM_EXE_PART[5]})/${SRM_EXE_PART[5]}
+                            # Parsing element files #
+                            for SRM_EXE_FILE in $SRM_EXE_IPOS/*; do
 
-                                # Parsing element files #
-                                for SRM_EXE_FILE in $SRM_EXE_IPOS/*; do
-
-                                    # Source data linkage #
-                                    ln -sf $SRM_EXE_FILE $SRM_EXE_OPOS/source/
-
-                                done
+                                # Source data linkage #
+                                ln -sf $SRM_EXE_FILE $SRM_EXE_OPOS/source/
 
                             done
+
+                        done
+
+                        # Check module mode #
+                        if [ "$SRM_MOD_MODE" == "mode" ]; then
 
                             # Display message #
                             srm_echo "    processing stage ..."
@@ -506,12 +506,12 @@
                             # Temporary storage #
                             srm_tmpfs delete
 
+                        else
+
+                            # Display message and update exit code #
+                            srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
+
                         fi
-
-                    else
-
-                        # Display message and update exit code #
-                        srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
 
                     fi
 
