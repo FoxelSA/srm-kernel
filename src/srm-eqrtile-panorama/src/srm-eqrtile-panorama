@@ -57,7 +57,7 @@
 
     # Classification variables #
     SRM_IO_ICLASS="eqrtile"
-    SRM_IO_OCLASS="panroama"
+    SRM_IO_OCLASS="panorama"
 
 # Argument and parameter
 #

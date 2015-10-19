@@ -3,7 +3,7 @@
 #   make - configuration
 #
 
-    SRM_NAME=srm-rectile-cloud
+    SRM_NAME=srm-panorama-panorama
 
 #
 #   make - synchronize
@@ -11,6 +11,7 @@
 
     all:directories
 	cp src/$(SRM_NAME) bin/$(SRM_NAME)
+	cp src/$(SRM_NAME)-kernel bin/$(SRM_NAME)-kernel
 
 #
 #   make - directories

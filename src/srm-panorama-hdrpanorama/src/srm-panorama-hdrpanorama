@@ -60,7 +60,7 @@
 
     # Classification variables #
     SRM_IO_ICLASS="panoroama"
-    SRM_IO_OCLASS="hdrpanorama"
+    SRM_IO_OCLASS="panoroama"
 
 # Argument and parameter
 #
@@ -387,7 +387,10 @@
         export OMP_NUM_THREADS=$(($SRM_PLL_CONF))
 
         # Composing hdr-panorama #
-        enfuse-mp $SRM_EXE_OPOS/source/*.tiff -o $SRM_EXE_OPOS/cluster/$SRM_MOD_AHAS.tiff &> /dev/null
+        enfuse-mp $SRM_EXE_OPOS/source/*.tiff -o $SRM_TMP_NAME/$SRM_MOD_AHAS.tiff &> /dev/null
+
+        # Inject results in storage structure #
+        rsync $SRM_TMP_NAME/$SRM_MOD_AHAS.tiff $SRM_EXE_OPOS/
 
     }
 
@@ -473,7 +476,7 @@
                     srm_echo "SRM Kernel : elements processing"
 
                     # Compose destination directory #
-                    SRM_EXE_OPOS=$SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/data/$SRM_MOD_AHAS
+                    SRM_EXE_OPOS=$SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/data/${SRM_MOD_AHAS:0:4}/$SRM_MOD_AHAS
 
                     # Check pose #
                     if ( [ -d $SRM_EXE_OPOS ] && [ "$SRM_MOD_FORC" == "true" ] ) || [ ! -d $SRM_EXE_OPOS ]; then
