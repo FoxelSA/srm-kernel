@@ -184,7 +184,9 @@
 
 # Module kernel specific function (norama@all)
 #
-#
+# This function is responsible of panorama rotation according to the provided
+# angles. The process compute the rotate panorama mapping and export it in
+# equirectangular projection.
 
     function srm_norama_rotate() {
 
@@ -204,7 +206,9 @@
 
 # Module kernel specific function (norama@eyesis4pi)
 #
-#
+# This function, specific to the Eyesis4Pi camera, is responsible of aligning
+# the panorama to earth through a rotation algorithm. The process uses the
+# inertial data provided by the camera IMU through the CSPS library.
 
     function srm_norama_earth_eyesis4pi() {
 
