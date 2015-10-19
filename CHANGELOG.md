@@ -1,6 +1,6 @@
 ## Changelog
 
-### Beta 0.3.2
+### Beta 0.4
 
 - `Added` : **srm-panorama-hdrpanorama** cluster module for HDR panorama
 - `Added` : Cluster module template script
