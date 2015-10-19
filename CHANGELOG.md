@@ -1,6 +1,6 @@
 ## Changelog
 
-### Beta 0.4
+### Release 0.4 (October 19, 2015)
 
 - `Added` : **srm-panorama-panorama** module for earth alignment and rotation
 - `Added` : **srm-panorama-hdrpanorama** cluster module for HDR panorama
