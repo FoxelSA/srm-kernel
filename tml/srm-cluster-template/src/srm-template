@@ -458,7 +458,7 @@
                     srm_echo "SRM Kernel : elements processing"
 
                     # Compose destination directory #
-                    SRM_EXE_OPOS=$SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/data/$SRM_MOD_AHAS
+                    SRM_EXE_OPOS=$SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/data/${SRM_MOD_AHAS:1:8}/$SRM_MOD_AHAS
 
                     # Check pose #
                     if ( [ -d $SRM_EXE_OPOS ] && [ "$SRM_MOD_FORC" == "true" ] ) || [ ! -d $SRM_EXE_OPOS ]; then
