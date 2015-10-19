@@ -2,6 +2,8 @@
 
 ### Beta 0.3.2
 
+- `Added` : **srm-panorama-hdrpanorama** cluster module for HDR panorama
+- `Added` : Cluster module template script
 - `Fixed` : Classification analysis for available node listing
 
 ### Release 0.3.1 (September 17, 2015)
