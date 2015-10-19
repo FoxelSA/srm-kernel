@@ -2,6 +2,7 @@
 
 ### Beta 0.4
 
+- `Added` : **srm-panorama-panorama** module for earth alignment and rotation
 - `Added` : **srm-panorama-hdrpanorama** cluster module for HDR panorama
 - `Added` : Cluster module template script
 - `Fixed` : Classification analysis for available node listing

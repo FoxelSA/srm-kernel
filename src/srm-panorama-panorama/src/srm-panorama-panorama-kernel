@@ -266,7 +266,7 @@
         srm_echo "    element ${SRM_IO_PART[5]}"
 
         # Check module mode #
-        if [ "$SRM_KER_MODE" == "rotate-norama" ]; then
+        if [ "$SRM_KER_MODE" == "norama-rotate" ]; then
 
             # Check pose #
             if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
@@ -288,7 +288,7 @@
 
             fi
 
-        elif [ "$SRM_KER_MODE" == "earth-norama" ]; then
+        elif [ "$SRM_KER_MODE" == "norama-earth" ]; then
 
             # Check device type #
             if [ "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
