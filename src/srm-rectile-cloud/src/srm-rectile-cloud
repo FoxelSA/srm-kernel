@@ -9,6 +9,10 @@
 #
 #       Nils Hamel <n.hamel@foxel.ch>
 #
+# Contributor(s):
+#
+#       Kevin Velickovic <k.velickovic@foxel.ch>
+#
 #
 # This file is part of the FOXEL project <http://foxel.ch>.
 #
@@ -253,22 +257,32 @@
 
         fi
 
-        # Check upper boundary - seconds #
-        if (( $SRM_TS_UNIX > $SRM_MH_UNIX )); then
-
-            # Update result #
-            SRM_RETURN=0
-
-        else
+        # Check intermediates result #
+        if (( $SRM_RETURN == 1 )); then
 
             # Check upper boundary - seconds #
-            if (( $SRM_TS_UNIX == $SRM_MH_UNIX )); then
+            if (( $SRM_TS_UNIX > $SRM_MH_UNIX )); then
 
-                # Check decimale boundary - micro-seconds #
-                if (( $SRM_TS_USEC > $SRM_MH_USEC )); then
+                # Update result #
+                SRM_RETURN=0
 
-                    # Update result #
-                    SRM_RETURN=0
+            else
+
+                # Check upper boundary - seconds #
+                if (( $SRM_TS_UNIX == $SRM_MH_UNIX )); then
+
+                    # Check decimale boundary - micro-seconds #
+                    if (( $SRM_TS_USEC > $SRM_MH_USEC )); then
+
+                        # Update result #
+                        SRM_RETURN=0
+
+                    else
+
+                        # Update result #
+                        SRM_RETURN=1
+
+                    fi
 
                 else
 
@@ -276,11 +290,6 @@
                     SRM_RETURN=1
 
                 fi
-
-            else
-
-                # Update result #
-                SRM_RETURN=1
 
             fi
 
@@ -385,7 +394,36 @@
 
     function srm_openmvg() {
 
-        
+        # Initialize structure #
+        mkdir -p $SRM_EXE_OPOS/cluster/images
+        mkdir -p $SRM_EXE_OPOS/cluster/matches
+        mkdir -p $SRM_EXE_OPOS/cluster/global
+
+        # Image subsampling #
+        for SRM_MVG_SRC in $SRM_EXE_OPOS/source/*_08.tiff; do
+
+            # Create symbolic link #
+            ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
+
+        done
+
+        #openMVG_main_SfMInit_ImageListing -i image_folder -o . -f 2048.0
+        #openMVG_main_ComputeFeatures -i sfm_data.json -o matches
+        #openMVG_main_ComputeMatches -i sfm_data.json -o matches -g e -v 10
+        #openMVG_main_GlobalSfM -i sfm_data.json -m matches -o global
+
+    }
+
+# Module specific function (densification@omvs)
+#
+
+    function srm_omvs() {
+
+        echo "..."
+    
+        #InterfaceOpenMVG2 -i global/sfm_data.json -o sfm_data.mvs
+        #DensifyPointCloud -i sfm_data.mvs
+        # sfm_data_dense.ply/mvs
 
     }
 
@@ -393,6 +431,12 @@
 #
 
     function srm_pmvs() {
+    
+        echo "..."
+
+        #openMVG_main_openMVG2PMVS -i global/sfm_data.json -o .
+        #pmvs2 PMVS/ pmvs_options.txt
+        # PMVS/models/pmvs_options.txt.ply
 
     }
 
@@ -439,6 +483,7 @@
                 srm_echo "    sha : $SRM_CMD_HASH"
                 srm_echo "    ish : $SRM_MOD_IHAS"
                 srm_echo "    osh : $SRM_MOD_OHAS"
+                srm_echo "    clh : $SRM_MOD_AHAS"
                 srm_echo "SRM Kernel : analysing addresses"
 
                 # Parse mmsr addresses #
@@ -518,7 +563,7 @@
                         if [ "$SRM_MOD_MODE" == "openmvg" ]; then
 
                             # Display message #
-                            srm_echo "    processing stage ..."
+                            srm_echo "    processing stage - visual odometry ..."
 
                             # Refinement process #
                             srm_openmvg
@@ -534,10 +579,18 @@
                         if [ "$SRM_MOD_DENS" == "pmvs" ]; then
 
                             # Display message #
-                            srm_echo "    processing stage ..."
+                            srm_echo "    processing stage - densification ..."
 
                             # Refinement process #
                             srm_pmvs
+
+                        elif [ "$SRM_MOD_DENS" == "omvs" ]; then
+
+                            # Display message #
+                            srm_echo "    processing stage - densification ..."
+
+                            # Refinement process #
+                            srm_omvs                            
 
                         else
 
