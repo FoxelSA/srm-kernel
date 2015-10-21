@@ -46,6 +46,7 @@
     SRM_MOD_EXEC="default"
     SRM_MOD_FORC="false"
     SRM_MOD_MODE="unknown"
+    SRM_MOD_DENS="unknown"
     SRM_MOD_MMSR=""
     SRM_MOD_IHAS=""
     SRM_MOD_OHAS=""
@@ -110,6 +111,9 @@
                 ;;
                 -m)
                     SRM_MOD_MODE="$srm_prm"
+                ;;
+                -d)
+                    SRM_MOD_DENS="$srm_prm"
                 ;;
 
             esac
@@ -376,12 +380,19 @@
 
     }
 
-# Module specific function (openmvg)
+# Module specific function (visual-odometry@openmvg)
 #
 
     function srm_openmvg() {
 
         
+
+    }
+
+# Module specific function (densification@pmvs)
+#
+
+    function srm_pmvs() {
 
     }
 
@@ -518,6 +529,22 @@
                             srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
 
                         fi
+
+                        # Check module mode #
+                        if [ "$SRM_MOD_DENS" == "pmvs" ]; then
+
+                            # Display message #
+                            srm_echo "    processing stage ..."
+
+                            # Refinement process #
+                            srm_pmvs
+
+                        else
+
+                            # Display message and update exit code #
+                            srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
+
+                        fi                    
 
                         # Temporary storage #
                         srm_tmpfs delete
