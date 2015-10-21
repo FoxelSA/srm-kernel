@@ -1,5 +1,9 @@
 ## Changelog
 
+### Beta 0.4.1
+
+- `Fixed` : Pose selection function correction
+
 ### Release 0.4 (October 19, 2015)
 
 - `Added` : **srm-panorama-panorama** module for earth alignment and rotation
