@@ -442,6 +442,7 @@
                 srm_echo "    sha : $SRM_CMD_HASH"
                 srm_echo "    ish : $SRM_MOD_IHAS"
                 srm_echo "    osh : $SRM_MOD_OHAS"
+                srm_echo "    clh : $SRM_MOD_AHAS"
                 srm_echo "SRM Kernel : analysing addresses"
 
                 # Parse mmsr addresses #
