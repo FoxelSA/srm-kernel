@@ -50,6 +50,7 @@
     SRM_MOD_EXEC="default"
     SRM_MOD_FORC="false"
     SRM_MOD_MODE="unknown"
+    SRM_MOD_OMGM="unknown"
     SRM_MOD_DENS="unknown"
     SRM_MOD_MMSR=""
     SRM_MOD_IHAS=""
@@ -115,6 +116,9 @@
                 ;;
                 -m)
                     SRM_MOD_MODE="$srm_prm"
+                ;;
+                -o)
+                    SRM_MOD_OMGM="$srm_prm"
                 ;;
                 -d)
                     SRM_MOD_DENS="$srm_prm"
@@ -402,25 +406,62 @@
         mkdir -p $SRM_EXE_OPOS/cluster/matches
         mkdir -p $SRM_EXE_OPOS/cluster/global
 
-        # Image subsampling #
-        for SRM_MVG_SRC in $SRM_EXE_OPOS/source/*_08.tiff; do
+        # Clear video mode #
+        SRM_MVG_MODE="-g e"
 
-            # Create symbolic link #
-            ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
+        # Check openmvg mode #
+        if [ "$SRM_MOD_OMGM" == "front" ]; then
 
-        done
+            # Image subsampling #
+            for SRM_MVG_SRC in $SRM_EXE_OPOS/source/*_08.tiff; do
+
+                # Create symbolic link #
+                ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
+
+            done
+ 
+            # Setup video mode #
+            SRM_MVG_MODE="SRM_MVG_MODE -v 10"
+
+        elif [ "$SRM_MOD_OMGM" == "front-ext" ]; then
+
+            # Image subsampling #
+            for SRM_MVG_SRC in $SRM_EXE_OPOS/source/*_08.tiff; do
+
+                # Create symbolic link #
+                ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
+
+            done
+
+            # Image subsampling #
+            for SRM_MVG_SRC in $SRM_EXE_OPOS/source/*_09.tiff; do
+
+                # Create symbolic link #
+                ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
+
+            done
+
+            # Image subsampling #
+            for SRM_MVG_SRC in $SRM_EXE_OPOS/source/*_15.tiff; do
+
+                # Create symbolic link #
+                ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
+
+            done
+
+        fi
 
         # Going to cluster directory #
         SRM_EXE_XPAT=$(pwd); cd $SRM_EXE_OPOS/cluster/
 
         # Initialize openmvg json-file #
-        openMVG_main_SfMInit_ImageListing -i ./images -o ./ -f 2049.189765663 #&> /dev/null
+        openMVG_main_SfMInit_ImageListing -i ./images -o ./ -f 2048 #&> /dev/null
 
         # Computing features #
         openMVG_main_ComputeFeatures -i ./sfm_data.json -o ./matches #&> /dev/null
 
         # Computing matches #
-        openMVG_main_ComputeMatches -i ./sfm_data.json -o ./matches -g e -v 10 #&> /dev/null
+        openMVG_main_ComputeMatches -i ./sfm_data.json -o ./matches $SRM_MVG_MODE #&> /dev/null
 
         # Computing global method for visual odometry #
         openMVG_main_GlobalSfM -i ./sfm_data.json -m ./matches -o ./global #&> /dev/null
