@@ -417,10 +417,10 @@
         openMVG_main_SfMInit_ImageListing -i ./images -o ./ -f 2049.189765663 #&> /dev/null
 
         # Computing features #
-        openMVG_main_ComputeFeatures -i ./sfm_data.json -o ./matches -p HIGH #&> /dev/null
+        openMVG_main_ComputeFeatures -i ./sfm_data.json -o ./matches #&> /dev/null
 
         # Computing matches #
-        openMVG_main_ComputeMatches -i ./sfm_data.json -o ./matches -g e -v 10 -r 0.8 #&> /dev/null
+        openMVG_main_ComputeMatches -i ./sfm_data.json -o ./matches -g e -v 10 #&> /dev/null
 
         # Computing global method for visual odometry #
         openMVG_main_GlobalSfM -i ./sfm_data.json -m ./matches -o ./global #&> /dev/null
@@ -439,38 +439,25 @@
         export OMP_NUM_THREADS=$(($SRM_PLL_CONF))
 
         # Initialize structure #
-        mkdir -p $SRM_EXE_OPOS/cluster/OMVS
+        mkdir -p $SRM_EXE_OPOS/cluster/omvs
 
         # Create links to source images #
-        ln -sf $SRM_EXE_OPOS/cluster/images $SRM_EXE_OPOS/cluster/OMVS/images
+        ln -sf $SRM_EXE_OPOS/cluster/images $SRM_EXE_OPOS/cluster/omvs/images
 
         # Going to cluster directory #
-        SRM_EXE_XPAT=$(pwd); cd $SRM_EXE_OPOS/cluster/OMVS
+        SRM_EXE_XPAT=$(pwd); cd $SRM_EXE_OPOS/cluster/omvs
 
         # Preparing visual odometry for densification #
-        InterfaceOpenMVG2 -i ../global/sfm_data.json -o ./sfm_data.mvs
+        InterfaceOpenMVG2 -i ../global/sfm_data.json -o ./sfm_data.mvs #&> /dev/null
 
         # Densification process #
-        DensifyPointCloud -i sfm_data.mvs
+        DensifyPointCloud -i sfm_data.mvs #&> /dev/null
 
         # Inject result in the standard structure #
         rsync ./sfm_data_dense.ply $SRM_EXE_OPOS/$SRM_MOD_AHAS.ply
 
         # Return to call directory #
         cd $SRM_EXE_XPAT
-
-    }
-
-# Module specific function (densification@pmvs)
-#
-
-    function srm_pmvs() {
-    
-        echo "..."
-
-        #openMVG_main_openMVG2PMVS -i global/sfm_data.json -o .
-        #pmvs2 PMVS/ pmvs_options.txt
-        # PMVS/models/pmvs_options.txt.ply
 
     }
 
@@ -610,15 +597,7 @@
                         fi
 
                         # Check module mode #
-                        if [ "$SRM_MOD_DENS" == "pmvs" ]; then
-
-                            # Display message #
-                            srm_echo "    processing stage - densification ..."
-
-                            # Refinement process #
-                            srm_pmvs
-
-                        elif [ "$SRM_MOD_DENS" == "omvs" ]; then
+                        if [ "$SRM_MOD_DENS" == "omvs" ]; then
 
                             # Display message #
                             srm_echo "    processing stage - densification ..."
