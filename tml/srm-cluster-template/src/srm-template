@@ -249,22 +249,32 @@
 
         fi
 
-        # Check upper boundary - seconds #
-        if (( $SRM_TS_UNIX > $SRM_MH_UNIX )); then
-
-            # Update result #
-            SRM_RETURN=0
-
-        else
+        # Check intermediates result #
+        if (( $SRM_RETURN == 1 )); then
 
             # Check upper boundary - seconds #
-            if (( $SRM_TS_UNIX == $SRM_MH_UNIX )); then
+            if (( $SRM_TS_UNIX > $SRM_MH_UNIX )); then
 
-                # Check decimale boundary - micro-seconds #
-                if (( $SRM_TS_USEC > $SRM_MH_USEC )); then
+                # Update result #
+                SRM_RETURN=0
 
-                    # Update result #
-                    SRM_RETURN=0
+            else
+
+                # Check upper boundary - seconds #
+                if (( $SRM_TS_UNIX == $SRM_MH_UNIX )); then
+
+                    # Check decimale boundary - micro-seconds #
+                    if (( $SRM_TS_USEC > $SRM_MH_USEC )); then
+
+                        # Update result #
+                        SRM_RETURN=0
+
+                    else
+
+                        # Update result #
+                        SRM_RETURN=1
+
+                    fi
 
                 else
 
@@ -272,11 +282,6 @@
                     SRM_RETURN=1
 
                 fi
-
-            else
-
-                # Update result #
-                SRM_RETURN=1
 
             fi
 
