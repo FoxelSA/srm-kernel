@@ -407,7 +407,7 @@
         mkdir -p $SRM_EXE_OPOS/cluster/global
 
         # Initialize options #
-        SRM_MVG_MODE="-g e"
+        SRM_MVG_MODE=""
         SRM_MVG_CHAN=""
 
         # Check openmvg mode #
@@ -416,23 +416,15 @@
             # Create model #
             SRM_MVG_CHAN="08.tiff"
 
-            # Setup video mode #
-            SRM_MVG_MODE="$SRM_MVG_MODE -v 10"
-
-        elif [ "$SRM_MOD_OMGM" == "front-bottom" ]; then
+        elif [ "$SRM_MOD_OMGM" == "back" ]; then
 
             # Create model #
-            SRM_MVG_CHAN="16.tiff 08.tiff"
+            SRM_MVG_CHAN="12.tiff"
 
-        elif [ "$SRM_MOD_OMGM" == "front-ext" ]; then
-
-            # Create model #
-            SRM_MVG_CHAN="08.tiff 09.tiff 15.tiff"
-
-        elif [ "$SRM_MOD_OMGM" == "front-bottom-ext" ]; then
+        elif [ "$SRM_MOD_OMGM" == "crown" ]; then
 
             # Create model #
-            SRM_MVG_CHAN="16.tiff 17.tiff 23.tiff 08.tiff 09.tiff 15.tiff"
+            SRM_MVG_CHAN="08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff"
 
         fi
 
@@ -457,6 +449,9 @@
 
         done
 
+        # Create pair list file #
+        srm_openmvg_pairs
+
         # Going to cluster directory #
         SRM_EXE_XPAT=$(pwd); cd $SRM_EXE_OPOS/cluster/
 
@@ -467,13 +462,108 @@
         openMVG_main_ComputeFeatures -i ./sfm_data.json -o ./matches #&> /dev/null
 
         # Computing matches #
-        openMVG_main_ComputeMatches -i ./sfm_data.json -o ./matches $SRM_MVG_MODE #&> /dev/null
+        openMVG_main_ComputeMatches -i ./sfm_data.json -o ./matches -l ./pairlist.txt -g e #&> /dev/null
 
         # Computing global method for visual odometry #
         openMVG_main_GlobalSfM -i ./sfm_data.json -m ./matches -o ./global #&> /dev/null
 
         # Return to call directory #
         cd $SRM_EXE_XPAT
+
+    }
+
+    function srm_openmvg_pairs() {
+
+        # Retrieve number of selected file #
+        SRM_MVG_FILE=$(ls -1 $SRM_EXE_OPOS/cluster/images/ | wc -l)
+
+        # Check openmvg mode #
+        if [ "$SRM_MOD_OMGM" == "front" ] || [ "$SRM_MOD_OMGM" == "back" ]; then
+
+            # Compute number of poses #
+            SRM_MVG_FILE=$(( $SRM_MVG_FILE / 1 ))
+
+            # Compose pair structure #
+            for SRM_MVG_MAIN in $(seq 0 $(( $SRM_MVG_FILE - 1 ))); do
+
+                # Initialize pair line #
+                SRM_MVG_PAIR="$SRM_MVG_MAIN"
+                SRM_MVG_ADDE=0
+
+                # Compose pair structure #
+                for SRM_MVG_SCDE in $(seq 1 10); do
+
+                    # Compute pair index #
+                    SRM_MVG_TEST=$(( $SRM_MVG_MAIN + $SRM_MVG_SCDE ))
+
+                    # Appending pair index #
+                    if (( $SRM_MVG_TEST < $SRM_MVG_FILE )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
+
+                done
+
+                # Export pair line #
+                if (( $SRM_MVG_ADDE > 0 )); then echo $SRM_MVG_PAIR >> $SRM_EXE_OPOS/cluster/pairlist.txt; fi
+
+            done
+
+        elif [ "$SRM_MOD_OMGM" == "crown" ]; then
+
+            # Compute number of poses #
+            SRM_MVG_FILE=$(( $SRM_MVG_FILE / 5 ))
+
+            # Compose pair structure #
+            for SRM_MVG_MAIN in $(seq 0 $(( $SRM_MVG_FILE - 1 ))); do
+
+                # Parsing crown #
+                for SRM_MVG_CROW in $(seq 0 7); do
+
+                    # Initialize pair line #
+                    SRM_MVG_PAIR=$(( ( $SRM_MVG_MAIN * 8 ) + $SRM_MVG_CROW ))
+                    SRM_MVG_ADDE=0
+
+                    # Adding pairs #
+                    for SRM_MVG_SCDE in $(seq 1 5); do
+
+                        # Compute pair index #
+                        SRM_MVG_TEST=$(( ( $SRM_MVG_MAIN * 8 ) + ( $SRM_MVG_SCDE * 8 ) + $SRM_MVG_CROW ))
+
+                        # Appending pair index #
+                        if (( $SRM_MVG_TEST < $SRM_MVG_FILE )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
+
+                        # Compute pair index #
+                        SRM_MVG_TEST=$(( ( $SRM_MVG_MAIN * 8 ) + ( $SRM_MVG_SCDE * 8 ) + ( ( $SRM_MVG_CROW + 1 ) % 8 ) ))
+
+                        # Appending pair index #
+                        if (( $SRM_MVG_TEST < $SRM_MVG_FILE )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
+
+                        # Compute pair index #
+                        SRM_MVG_TEST=$(( ( $SRM_MVG_MAIN * 8 ) + ( $SRM_MVG_SCDE * 8 ) + ( ( $SRM_MVG_CROW + 7 ) % 8 ) ))
+
+                        # Appending pair index #
+                        if (( $SRM_MVG_TEST < $SRM_MVG_FILE )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
+
+                        # Compute pair index #
+                        SRM_MVG_TEST=$(( ( $SRM_MVG_MAIN * 8 ) + ( $SRM_MVG_SCDE * 8 ) + ( ( $SRM_MVG_CROW + 2 ) % 8 ) ))
+
+                        # Appending pair index #
+                        if (( $SRM_MVG_TEST < $SRM_MVG_FILE )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
+
+                        # Compute pair index #
+                        SRM_MVG_TEST=$(( ( $SRM_MVG_MAIN * 8 ) + ( $SRM_MVG_SCDE * 8 ) + ( ( $SRM_MVG_CROW + 6 ) % 8 ) ))
+
+                        # Appending pair index #
+                        if (( $SRM_MVG_TEST < $SRM_MVG_FILE )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
+
+                    done
+
+                    # Export pair line #
+                    if (( $SRM_MVG_ADDE > 0 )); then echo $SRM_MVG_PAIR >> $SRM_EXE_OPOS/cluster/pairlist.txt; fi
+
+                done
+
+            done
+
+        fi        
 
     }
 
@@ -650,7 +740,7 @@
                             srm_echo "    processing stage - densification ..."
 
                             # Refinement process #
-                            srm_omvs                            
+                            srm_omvs
 
                         else
 
