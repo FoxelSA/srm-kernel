@@ -395,6 +395,15 @@
 
 # Module specific function (visual-odometry@openmvg)
 #
+# This function is responsible of visual odometry extraction based on the images
+# provided by digitisation devise. According to the execution mode, it also
+# selects the sensors of the device that are used for the the odometry extract.
+# The openMVG software is used to extract the visual odometry through this
+# function.
+#
+# In addition to this function, a specific function is also provided to compose
+# the pair list file, containing the images comparison rules, according to the
+# visual odometry extraction mode.
 
     function srm_openmvg() {
 
@@ -595,6 +604,9 @@
 
 # Module specific function (densification@omvs)
 #
+# This function is responsible of the creation of dense point clouds on the
+# basis of the visual odometry and the provided images used to compute it. This
+# function implements the openMVS densification software.
 
     function srm_omvs() {
 
