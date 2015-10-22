@@ -406,50 +406,56 @@
         mkdir -p $SRM_EXE_OPOS/cluster/matches
         mkdir -p $SRM_EXE_OPOS/cluster/global
 
-        # Clear video mode #
+        # Initialize options #
         SRM_MVG_MODE="-g e"
+        SRM_MVG_CHAN=""
 
         # Check openmvg mode #
         if [ "$SRM_MOD_OMGM" == "front" ]; then
 
-            # Image subsampling #
-            for SRM_MVG_SRC in $SRM_EXE_OPOS/source/*_08.tiff; do
+            # Create model #
+            SRM_MVG_CHAN="08.tiff"
 
-                # Create symbolic link #
-                ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
-
-            done
- 
             # Setup video mode #
-            SRM_MVG_MODE="SRM_MVG_MODE -v 10"
+            SRM_MVG_MODE="$SRM_MVG_MODE -v 10"
+
+        elif [ "$SRM_MOD_OMGM" == "front-bottom" ]; then
+
+            # Create model #
+            SRM_MVG_CHAN="16.tiff 08.tiff"
 
         elif [ "$SRM_MOD_OMGM" == "front-ext" ]; then
 
-            # Image subsampling #
-            for SRM_MVG_SRC in $SRM_EXE_OPOS/source/*_08.tiff; do
+            # Create model #
+            SRM_MVG_CHAN="08.tiff 09.tiff 15.tiff"
 
-                # Create symbolic link #
-                ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
+        elif [ "$SRM_MOD_OMGM" == "front-bottom-ext" ]; then
 
-            done
-
-            # Image subsampling #
-            for SRM_MVG_SRC in $SRM_EXE_OPOS/source/*_09.tiff; do
-
-                # Create symbolic link #
-                ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
-
-            done
-
-            # Image subsampling #
-            for SRM_MVG_SRC in $SRM_EXE_OPOS/source/*_15.tiff; do
-
-                # Create symbolic link #
-                ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
-
-            done
+            # Create model #
+            SRM_MVG_CHAN="16.tiff 17.tiff 23.tiff 08.tiff 09.tiff 15.tiff"
 
         fi
+
+        # Image sampling #
+        for SRM_MVG_SRC in $(ls -v $SRM_EXE_OPOS/source/*.tiff); do
+
+            # Extract file basename #
+            SRM_MVG_NAME=$(basename $SRM_MVG_SRC)
+
+            # Parsing model #
+            for SMR_MVG_CHN in $SRM_MVG_CHAN; do
+
+                # Image channel filtering #
+                if [[ "$SRM_MVG_NAME" == *"$SMR_MVG_CHN"* ]]; then
+
+                    # Create symbolic link #
+                    ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
+
+                fi
+
+            done
+
+        done
 
         # Going to cluster directory #
         SRM_EXE_XPAT=$(pwd); cd $SRM_EXE_OPOS/cluster/
