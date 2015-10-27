@@ -556,7 +556,7 @@
         elif [ "$SRM_MOD_OMGM" == "crown" ]; then
 
             # Compute number of poses #
-            SRM_MVG_FILE=$(( $SRM_MVG_FILE / 5 ))
+            SRM_MVG_FILE=$(( $SRM_MVG_FILE / 8 ))
 
             # Compose pair structure #
             for SRM_MVG_MAIN in $(seq 0 $(( $SRM_MVG_FILE - 1 ))); do
@@ -569,25 +569,24 @@
                     SRM_MVG_ADDE=0
 
                     # Adding pairs #
-                    for SRM_MVG_SCDE in $(seq 1 5); do
+                    for SRM_MVG_SCDE in $(seq 1 10); do
 
-                        # Compute pair index #
-                        SRM_MVG_TEST=$(( ( $SRM_MVG_MAIN * 8 ) + ( $SRM_MVG_SCDE * 8 ) + $SRM_MVG_CROW ))
+                        # Compute pair range #
+                        SRM_MVG_ATOL=$SRM_MVG_SCDE
 
-                        # Appending pair index #
-                        if (( $SRM_MVG_TEST < $SRM_MVG_FILE )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
+                        # Computing limitation #
+                        if (( $SRM_MVG_ATOL > 4 )); then SRM_MVG_ATOL=4; fi
 
-                        # Compute pair index #
-                        SRM_MVG_TEST=$(( ( $SRM_MVG_MAIN * 8 ) + ( $SRM_MVG_SCDE * 8 ) + ( ( $SRM_MVG_CROW + 1 ) % 8 ) ))
+                        # Parsing comparison tolerence #
+                        for SRM_MVG_CTOL in $(seq -$SRM_MVG_ATOL $SRM_MVG_ATOL); do
 
-                        # Appending pair index #
-                        if (( $SRM_MVG_TEST < $SRM_MVG_FILE )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
+                            # Compute pair index #
+                            SRM_MVG_TEST=$(( ( $SRM_MVG_MAIN * 8 ) + ( $SRM_MVG_SCDE * 8 ) + ( ( $SRM_MVG_CROW + 8 + $SRM_MVG_CTOL ) % 8 ) ))
 
-                        # Compute pair index #
-                        SRM_MVG_TEST=$(( ( $SRM_MVG_MAIN * 8 ) + ( $SRM_MVG_SCDE * 8 ) + ( ( $SRM_MVG_CROW + 7 ) % 8 ) ))
+                            # Appending pair index #
+                            if (( $SRM_MVG_TEST < $SRM_MVG_FILE * 8 )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
 
-                        # Appending pair index #
-                        if (( $SRM_MVG_TEST < $SRM_MVG_FILE )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
+                        done
 
                     done
 
