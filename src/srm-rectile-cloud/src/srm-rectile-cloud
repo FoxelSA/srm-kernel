@@ -702,7 +702,7 @@
 # basis of the visual odometry and the provided images used to compute it. This
 # function implements the openMVS densification software.
 
-    function srm_omvs() {
+    function srm_openmvs() {
 
         # Local thread configuration #
         export OMP_NUM_THREADS=$(($SRM_PLL_CONF))
@@ -812,121 +812,131 @@
                     # Display module processing #
                     srm_echo "SRM Kernel : elements processing"
 
-                    # Compose destination directory #
-                    SRM_EXE_OPOS=$SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/data/${SRM_MOD_AHAS:0:8}/$SRM_MOD_AHAS
+                    # Check device type #
+                    if [ "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
 
-                    # Check pose #
-                    if ( [ -d $SRM_EXE_OPOS ] && [ "$SRM_MOD_FORC" == "true" ] ) || [ ! -d $SRM_EXE_OPOS ]; then
+                        # Compose destination directory #
+                        SRM_EXE_OPOS=$SRM_MNT_BASE/cluster/$SRM_MOD_OHAS/data/${SRM_MOD_AHAS:0:8}/$SRM_MOD_AHAS
 
-                        # Temporary storage #
-                        srm_tmpfs create
+                        # Check pose #
+                        if ( [ -d $SRM_EXE_OPOS ] && [ "$SRM_MOD_FORC" == "true" ] ) || [ ! -d $SRM_EXE_OPOS ]; then
 
-                        # Remove previous data #
-                        if [ -d $SRM_EXE_OPOS ]; then rm -rf $SRM_EXE_OPOS; fi
+                            # Temporary storage #
+                            srm_tmpfs create
 
-                        # Create destination directory #
-                        mkdir -p $SRM_EXE_OPOS; mkdir -p $SRM_EXE_OPOS/source; mkdir -p $SRM_EXE_OPOS/cluster
+                            # Remove previous data #
+                            if [ -d $SRM_EXE_OPOS ]; then rm -rf $SRM_EXE_OPOS; fi
 
-                        # Display message #
-                        srm_echo "    gathering stage ..."
+                            # Create destination directory #
+                            mkdir -p $SRM_EXE_OPOS; mkdir -p $SRM_EXE_OPOS/source; mkdir -p $SRM_EXE_OPOS/cluster
 
-                        # Parsing source elements #
-                        for SRM_EXE_PATH in $SRM_PLL_POSE; do
+                            # Display message #
+                            srm_echo "    gathering stage ..."
 
-                            # Decompose IO buffer #
-                            SRM_EXE_PART=(${SRM_EXE_PATH//,/ })
-
-                            # Compose source directory #
-                            SRM_EXE_IPOS=$SRM_MNT_BASE/pose/${SRM_EXE_PART[0]}/data/${SRM_EXE_PART[2]}/master/${SRM_EXE_PART[3]}/segment/${SRM_EXE_PART[4]}/pose/$(srm_tshash ${SRM_EXE_PART[5]})/${SRM_EXE_PART[5]}
-
-                            # Parsing element files #
-                            for SRM_EXE_FILE in $SRM_EXE_IPOS/*; do
-
-                                # Source data linkage #
-                                ln -sf $SRM_EXE_FILE $SRM_EXE_OPOS/source/
-
-                            done
-
-                        done
-
-                        # Display message #
-                        srm_echo "    processing stage - visual odometry ..."
-
-                        # Check module mode #
-                        if [ "$SRM_MOD_MODE" == "openmvg" ]; then
-
-                            # Refinement process #
-                            srm_openmvg
-
-                        if [ "SRM_MOD_MODE" == "openmvgrig" ]; then
-
-                            # Initialize consistency check #
-                            SRM_EXE_DEVI=""
-
-                            # Consistency check #
+                            # Parsing source elements #
                             for SRM_EXE_PATH in $SRM_PLL_POSE; do
 
                                 # Decompose IO buffer #
                                 SRM_EXE_PART=(${SRM_EXE_PATH//,/ })
 
-                                # Check previous storage #
-                                if [ -z "$SRM_EXE_DEVI" ]; then
+                                # Compose source directory #
+                                SRM_EXE_IPOS=$SRM_MNT_BASE/pose/${SRM_EXE_PART[0]}/data/${SRM_EXE_PART[2]}/master/${SRM_EXE_PART[3]}/segment/${SRM_EXE_PART[4]}/pose/$(srm_tshash ${SRM_EXE_PART[5]})/${SRM_EXE_PART[5]}
 
-                                    # Store found device #
-                                    SRM_EXE_DEVI="${SRM_EXE_PART[2]}"
+                                # Parsing element files #
+                                for SRM_EXE_FILE in $SRM_EXE_IPOS/*; do
 
-                                else
+                                    # Source data linkage #
+                                    ln -sf $SRM_EXE_FILE $SRM_EXE_OPOS/source/
 
-                                    # Check consistency #
-                                    if [ "${SRM_EXE_PART[2]}" -ne "$SRM_EXE_DEVI" ]; then
-                                    
-                                        # Writing failure code #
-                                        SRM_EXE_DEVI="null"
-
-                                    fi
-
-                                fi
+                                done
 
                             done
 
-                            # Check consistency result #
-                            if [ "$SRM_EXE_DEVI" -ne "null" ]; then
+                            # Display message #
+                            srm_echo "    processing stage - visual odometry ..."
+
+                            # Check module mode #
+                            if [ "$SRM_MOD_MODE" == "openmvg" ]; then
 
                                 # Refinement process #
-                                srm_openmvgrig $SRM_EXE_DEVI
+                                srm_openmvg
+
+                            elif [ "SRM_MOD_MODE" == "openmvgrig" ]; then
+
+                                # Initialize consistency check #
+                                SRM_EXE_DEVI=""
+
+                                # Consistency check #
+                                for SRM_EXE_PATH in $SRM_PLL_POSE; do
+
+                                    # Decompose IO buffer #
+                                    SRM_EXE_PART=(${SRM_EXE_PATH//,/ })
+
+                                    # Check previous storage #
+                                    if [ -z "$SRM_EXE_DEVI" ]; then
+
+                                        # Store found device #
+                                        SRM_EXE_DEVI="${SRM_EXE_PART[2]}"
+
+                                    else
+
+                                        # Check consistency #
+                                        if [ "${SRM_EXE_PART[2]}" -ne "$SRM_EXE_DEVI" ]; then
+                                        
+                                            # Writing failure code #
+                                            SRM_EXE_DEVI="null"
+
+                                        fi
+
+                                    fi
+
+                                done
+
+                                # Check consistency result #
+                                if [ "$SRM_EXE_DEVI" -ne "null" ]; then
+
+                                    # Refinement process #
+                                    srm_openmvgrig $SRM_EXE_DEVI
+
+                                else
+
+                                    # Display message and update exit code #
+                                    srm_echo "SRM Kernel : Error, rig mode only available for single device image collection"; SRM_SIG_EXIT=1
+
+                                fi
 
                             else
 
                                 # Display message and update exit code #
-                                srm_echo "SRM Kernel : Error, rig mode only available for single device image collection"; SRM_SIG_EXIT=1
+                                srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
 
                             fi
 
-                        else
+                            # Display message #
+                            srm_echo "    processing stage - densification ..."
 
-                            # Display message and update exit code #
-                            srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
+                            # Check module mode #
+                            if [ "$SRM_MOD_DENS" == "openmvs" ]; then
+
+                                # Refinement process #
+                                srm_openmvs
+
+                            else
+
+                                # Display message and update exit code #
+                                srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
+
+                            fi                    
+
+                            # Temporary storage #
+                            srm_tmpfs delete
 
                         fi
 
-                        # Display message #
-                        srm_echo "    processing stage - densification ..."
+                    else
 
-                        # Check module mode #
-                        if [ "$SRM_MOD_DENS" == "omvs" ]; then
-
-                            # Refinement process #
-                            srm_omvs
-
-                        else
-
-                            # Display message and update exit code #
-                            srm_echo "SRM Kernel : Error, unknown module mode"; SRM_SIG_EXIT=1
-
-                        fi                    
-
-                        # Temporary storage #
-                        srm_tmpfs delete
+                        # Display message and update exit code #
+                        srm_echo "SRM Kernel : Error, unknown device type"; SRM_SIG_EXIT=1
 
                     fi
 
