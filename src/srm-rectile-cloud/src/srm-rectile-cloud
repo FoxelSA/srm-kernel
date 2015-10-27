@@ -416,7 +416,6 @@
         mkdir -p $SRM_EXE_OPOS/cluster/global
 
         # Initialize options #
-        SRM_MVG_MODE=""
         SRM_MVG_CHAN=""
 
         # Check openmvg mode #
@@ -434,6 +433,16 @@
 
             # Create model #
             SRM_MVG_CHAN="08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff"
+
+        elif [ "$SRM_MOD_OMGM" == "crownsp" ]; then
+
+            # Create model #
+            SRM_MVG_CHAN="08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff 24.tiff 25.tiff"
+
+        elif [ "$SRM_MOD_OMGM" == "total" ]; then
+
+            # Create model #
+            SRM_MVG_CHAN="01.tiff 02.tiff 03.tiff 04.tiff 05.tiff 06.tiff 07.tiff 08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff 16.tiff 17.tiff 18.tiff 19.tiff 20.tiff 21.tiff 22.tiff 23.tiff 24.tiff 25.tiff"
 
         elif [ "$SRM_MOD_OMGM" == "sp1024" ]; then
 
@@ -488,6 +497,74 @@
 
         # Return to call directory #
         cd $SRM_EXE_XPAT
+
+    }
+
+    function srm_openmvgrig() {
+
+        # Local thread configuration #
+        export OMP_NUM_THREADS=$(($SRM_PLL_CONF))
+
+        # Initialize structure #
+        mkdir -p $SRM_EXE_OPOS/cluster/images
+        mkdir -p $SRM_EXE_OPOS/cluster/matches
+        mkdir -p $SRM_EXE_OPOS/cluster/global
+
+        # Initialize options #
+        SRM_MVG_CHAN=""
+
+        # Check openmvg mode #
+        if [ "$SRM_MOD_OMGM" == "crown" ]; then
+
+            # Create model #
+            SRM_MVG_CHAN="8\n9\n10\n11\n12\n13\n14\n15"
+
+        elif [ "$SRM_MOD_OMGM" == "crownsp" ]; then
+
+            # Create model #
+            SRM_MVG_CHAN="8\n9\n10\n11\n12\n13\n14\n15\n24\n25"
+
+        elif [ "$SRM_MOD_OMGM" == "total" ]; then
+
+            # Create model #
+            SRM_MVG_CHAN="0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25"
+
+        elif [ "SRM_MOD_OMGM" == "sp1024" ]; then
+
+            # Create model #
+            SRM_MVG_CHAN="10\n24"
+
+        elif [ "SRM_MOD_OMGM" == "sp1425" ]; then
+
+            # Create model #
+            SRM_MVG_CHAN="14\n25"
+
+        fi
+
+        # Going to cluster directory #
+        SRM_EXE_XPAT=$(pwd); cd $SRM_EXE_OPOS/cluster/
+
+        # Create channel file #
+        echo -e "$SRM_MVG_CHAN" > ./channel.txt
+
+        # Create pair list file #
+        srm_openmvg_pairs
+
+        # Initialize openmvg json-file #
+        openMVGRig_SfMInit_ImageListing -i ./images -o ./ -m $1 -d $SRM_MNT_BASE -c ./channel.txt #&> /dev/null
+
+        # Computing features #
+        openMVG_main_ComputeFeatures -i ./sfm_data.json -o ./matches #&> /dev/null
+
+        # Computing matches #
+        openMVG_main_ComputeMatches -i ./sfm_data.json -o ./matches -l ./pairlist.txt -g e #&> /dev/null
+
+        # Computing global method for visual odometry #
+        openMVGRig_GlobalSfM -i ./sfm_data.json -m ./matches -o ./global -f 0 #&> /dev/null
+
+        # Return to call directory #
+        cd $SRM_EXE_XPAT
+        
 
     }
 
@@ -553,19 +630,37 @@
 
             done
 
-        elif [ "$SRM_MOD_OMGM" == "crown" ]; then
+        elif [ "$SRM_MOD_OMGM" == "crown" ] || [ "$SRM_MOD_OMGM" == "crownsp" ] || [ "$SRM_MOD_OMGM" == "total" ]; then
+
+            # Check assembly #
+            if [ "$SRM_MOD_OMGM" == "crown" ]; then
+
+                # Setting assembly sensor count #
+                SRM_MOD_ASCT=8
+
+            elif [ "$SRM_MOD_OMGM" == "crownsp" ]; then
+
+                # Setting assembly sensor count #
+                SRM_MOD_ASCT=10
+
+            elif [ "$SRM_MOD_OMGM" == "total" ]; then
+
+                # Setting assembly sensor count #
+                SRM_MOD_ASCT=26
+
+            fi
 
             # Compute number of poses #
-            SRM_MVG_FILE=$(( $SRM_MVG_FILE / 8 ))
+            SRM_MVG_FILE=$(( $SRM_MVG_FILE / $SRM_MOD_ASCT ))
 
             # Compose pair structure #
             for SRM_MVG_MAIN in $(seq 0 $(( $SRM_MVG_FILE - 1 ))); do
 
                 # Parsing crown #
-                for SRM_MVG_CROW in $(seq 0 7); do
+                for SRM_MVG_CROW in $(seq 0 $(($SRM_MOD_ASCT-1)) ); do
 
                     # Initialize pair line #
-                    SRM_MVG_PAIR=$(( ( $SRM_MVG_MAIN * 8 ) + $SRM_MVG_CROW ))
+                    SRM_MVG_PAIR=$(( ( $SRM_MVG_MAIN * $SRM_MOD_ASCT ) + $SRM_MVG_CROW ))
                     SRM_MVG_ADDE=0
 
                     # Adding pairs #
@@ -581,10 +676,10 @@
                         for SRM_MVG_CTOL in $(seq -$SRM_MVG_ATOL $SRM_MVG_ATOL); do
 
                             # Compute pair index #
-                            SRM_MVG_TEST=$(( ( $SRM_MVG_MAIN * 8 ) + ( $SRM_MVG_SCDE * 8 ) + ( ( $SRM_MVG_CROW + 8 + $SRM_MVG_CTOL ) % 8 ) ))
+                            SRM_MVG_TEST=$(( ( $SRM_MVG_MAIN * $SRM_MOD_ASCT ) + ( $SRM_MVG_SCDE * $SRM_MOD_ASCT ) + ( ( $SRM_MVG_CROW + $SRM_MOD_ASCT + $SRM_MVG_CTOL ) % $SRM_MOD_ASCT ) ))
 
                             # Appending pair index #
-                            if (( $SRM_MVG_TEST < $SRM_MVG_FILE * 8 )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
+                            if (( $SRM_MVG_TEST < $SRM_MVG_FILE * $SRM_MOD_ASCT )); then SRM_MVG_PAIR="$SRM_MVG_PAIR $SRM_MVG_TEST"; SRM_MVG_ADDE=$(( $SRM_MVG_ADDE + 1 )); fi
 
                         done
 
@@ -754,14 +849,19 @@
 
                         done
 
+                        # Display message #
+                        srm_echo "    processing stage - visual odometry ..."
+
                         # Check module mode #
                         if [ "$SRM_MOD_MODE" == "openmvg" ]; then
 
-                            # Display message #
-                            srm_echo "    processing stage - visual odometry ..."
-
                             # Refinement process #
                             srm_openmvg
+
+                        if [ "SRM_MOD_MODE" == "openmvgrig" ]; then
+
+                            # Refinement process #
+                            srm_openmvgrig
 
                         else
 
@@ -770,11 +870,11 @@
 
                         fi
 
+                        # Display message #
+                        srm_echo "    processing stage - densification ..."
+
                         # Check module mode #
                         if [ "$SRM_MOD_DENS" == "omvs" ]; then
-
-                            # Display message #
-                            srm_echo "    processing stage - densification ..."
 
                             # Refinement process #
                             srm_omvs
