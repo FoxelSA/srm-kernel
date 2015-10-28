@@ -512,46 +512,83 @@
 
         # Initialize options #
         SRM_MVG_CHAN=""
+        SRM_MVG_DRIG=""
 
         # Check openmvg mode #
         if [ "$SRM_MOD_OMGM" == "crown" ]; then
 
             # Create model #
-            SRM_MVG_CHAN="8\n9\n10\n11\n12\n13\n14\n15"
+            SRM_MVG_CHAN="08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff"
+
+            # Create rig structure #
+            SRM_MVG_DRIG="8\n9\n10\n11\n12\n13\n14\n15"
 
         elif [ "$SRM_MOD_OMGM" == "crownsp" ]; then
 
             # Create model #
-            SRM_MVG_CHAN="8\n9\n10\n11\n12\n13\n14\n15\n24\n25"
+            SRM_MVG_CHAN="08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff 24.tiff 25.tiff"
+
+            # Create rig structure #
+            SRM_MVG_DRIG="8\n9\n10\n11\n12\n13\n14\n15\n24\n25"
 
         elif [ "$SRM_MOD_OMGM" == "total" ]; then
 
             # Create model #
-            SRM_MVG_CHAN="0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25"
+            SRM_MVG_CHAN="01.tiff 02.tiff 03.tiff 04.tiff 05.tiff 06.tiff 07.tiff 08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff 16.tiff 17.tiff 18.tiff 19.tiff 20.tiff 21.tiff 22.tiff 23.tiff 24.tiff 25.tiff"
+
+            # Create rig structure #
+            SRM_MVG_DRIG="0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25"
 
         elif [ "SRM_MOD_OMGM" == "sp1024" ]; then
 
             # Create model #
-            SRM_MVG_CHAN="10\n24"
+            SRM_MVG_CHAN="10.tiff 24.tiff"
+
+            # Create rig structure #
+            SRM_MVG_DRIG="10\n24"
 
         elif [ "SRM_MOD_OMGM" == "sp1425" ]; then
 
             # Create model #
-            SRM_MVG_CHAN="14\n25"
+            SRM_MVG_CHAN="14.tiff 25.tiff"
+
+            # Create rig structure #
+            SRM_MVG_DRIG="14\n25"
 
         fi
+
+        # Image sampling #
+        for SRM_MVG_SRC in $(ls -v $SRM_EXE_OPOS/source/*.tiff); do
+
+            # Extract file basename #
+            SRM_MVG_NAME=$(basename $SRM_MVG_SRC)
+
+            # Parsing model #
+            for SMR_MVG_CHN in $SRM_MVG_CHAN; do
+
+                # Image channel filtering #
+                if [[ "$SRM_MVG_NAME" == *"$SMR_MVG_CHN"* ]]; then
+
+                    # Create symbolic link #
+                    ln -sf $SRM_MVG_SRC $SRM_EXE_OPOS/cluster/images/
+
+                fi
+
+            done
+
+        done
 
         # Going to cluster directory #
         SRM_EXE_XPAT=$(pwd); cd $SRM_EXE_OPOS/cluster/
 
         # Create channel file #
-        echo -e "$SRM_MVG_CHAN" > ./channel.txt
+        echo -e "$SRM_MVG_DRIG" > ./channel.txt
 
         # Create pair list file #
         srm_openmvg_pairs
 
         # Initialize openmvg json-file #
-        openMVGRig_SfMInit_ImageListing -i ./images -o ./ -m $1 -d $SRM_MNT_BASE -c ./channel.txt #&> /dev/null
+        openMVGRig_SfMInit_ImageListing2 -i ./images -o ./ -m $1 -d $SRM_MNT_BASE -c ./channel.txt #&> /dev/null
 
         # Computing features #
         openMVG_main_ComputeFeatures -i ./sfm_data.json -o ./matches #&> /dev/null
