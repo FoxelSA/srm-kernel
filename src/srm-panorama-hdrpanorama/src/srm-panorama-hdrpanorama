@@ -59,8 +59,8 @@
     SRM_SIG_EXIT=0
 
     # Classification variables #
-    SRM_IO_ICLASS="panoroama"
-    SRM_IO_OCLASS="panoroama"
+    SRM_IO_ICLASS="panorama"
+    SRM_IO_OCLASS="hdrpanorama"
 
 # Argument and parameter
 #
