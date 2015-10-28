@@ -878,7 +878,7 @@
                                 else
 
                                     # Check consistency #
-                                    if [ "${SRM_EXE_PART[2]}" -ne "$SRM_EXE_DEVI" ]; then
+                                    if [ "${SRM_EXE_PART[2]}" != "$SRM_EXE_DEVI" ]; then
                                     
                                         # Writing failure code #
                                         SRM_EXE_DEVI="null"
@@ -890,7 +890,7 @@
                             done
 
                             # Check consistency result #
-                            if [ "$SRM_EXE_DEVI" -ne "null" ]; then
+                            if [ "$SRM_EXE_DEVI" != "null" ]; then
 
                                 # Refinement process #
                                 srm_openmvgrig $SRM_EXE_DEVI
