@@ -413,7 +413,7 @@
         # Initialize structure #
         mkdir -p $SRM_EXE_OPOS/cluster/images
         mkdir -p $SRM_EXE_OPOS/cluster/matches
-        mkdir -p $SRM_EXE_OPOS/cluster/global
+        mkdir -p $SRM_EXE_OPOS/cluster/omvg
 
         # Initialize options #
         SRM_MVG_CHAN=""
@@ -493,7 +493,7 @@
         openMVG_main_ComputeMatches -i ./sfm_data.json -o ./matches -l ./pairlist.txt -g e #&> /dev/null
 
         # Computing global method for visual odometry #
-        openMVG_main_GlobalSfM -i ./sfm_data.json -m ./matches -o ./global #&> /dev/null
+        openMVG_main_GlobalSfM -i ./sfm_data.json -m ./matches -o ./omvg #&> /dev/null
 
         # Return to call directory #
         cd $SRM_EXE_XPAT
@@ -597,7 +597,7 @@
         openMVG_main_ComputeMatches -i ./sfm_data.json -o ./matches -l ./pairlist.txt -g e #&> /dev/null
 
         # Computing global method for visual odometry #
-        openMVGRig_GlobalSfM -i ./sfm_data.json -m ./matches -o ./global -f 0 #&> /dev/null
+        openMVGRig_GlobalSfM -i ./sfm_data.json -m ./matches -o ./omvg -f 0 #&> /dev/null
 
         # Return to call directory #
         cd $SRM_EXE_XPAT
@@ -754,7 +754,7 @@
         SRM_EXE_XPAT=$(pwd); cd $SRM_EXE_OPOS/cluster/omvs
 
         # Preparing visual odometry for densification #
-        InterfaceOpenMVG2 -i ../global/sfm_data.json -o ./sfm_data.mvs #&> /dev/null
+        InterfaceOpenMVG2 -i ../omvg/sfm_data.json -o ./sfm_data.mvs #&> /dev/null
 
         # Densification process #
         DensifyPointCloud -i sfm_data.mvs #&> /dev/null
