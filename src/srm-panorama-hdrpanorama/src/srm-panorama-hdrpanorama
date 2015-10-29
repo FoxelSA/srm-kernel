@@ -534,6 +534,14 @@
 
                         fi
 
+                        # Check processing #
+                        if (( $SRM_SIG_EXIT == 1 )); then
+
+                            # Remove partially/aborted data #
+                            if [ -d $SRM_EXE_OPOS ]; then rm -rf $SRM_EXE_OPOS; fi
+
+                        fi
+
                         # Temporary storage #
                         srm_tmpfs delete
 
