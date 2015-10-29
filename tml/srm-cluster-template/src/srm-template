@@ -367,6 +367,58 @@
 
     }
 
+# Single device verification
+#
+# This function parses the poses array computed by the module and determines if
+# every poses stored in the array come from the same capture device. If all
+# poses come from the same device, the function answer 1, 0 otherwise.
+
+    function srm_singledev() {
+
+        # Initialize verification #
+        SRM_SDV_MACA=""
+
+        # Parsing pose array #
+        for SRM_SDV_POSE in $1; do
+
+            # Decompose pose array #
+            SRM_SDV_PART=(${SRM_SDV_POSE//,/ })
+
+            # Check initial state #
+            if [ -z "$SRM_SDV_MACA" ]; then
+
+                # Store MAC address #
+                SRM_SDV_MACA="${SRM_SDV_PART[2]}"
+
+            else
+
+                # Single device verification #
+                if [ "${SRM_SDV_PART[2]}" != "$SRM_SDV_MACA" ]; then
+
+                    # Invalidate MAC address #
+                    SRM_SDV_MACA="null"
+
+                fi
+
+            fi
+
+        done
+
+        # Verification results #
+        if [ "$SRM_SDV_MACA" == "null"; then
+
+            # Verification failed #
+            echo 0
+
+        else
+
+            # Verification succeed #
+            echo 1
+
+        fi      
+
+    }
+
 # Calibration data access
 #
 # This function allows to query calibration data through the standard storage
