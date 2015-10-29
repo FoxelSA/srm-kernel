@@ -385,7 +385,8 @@
 #
 # This function parses the poses array computed by the module and determines if
 # every poses stored in the array come from the same capture device. If all
-# poses come from the same device, the function answer 1, 0 otherwise.
+# poses come from the same device, the function answer the device MAC address,
+# null otherwise.
 
     function srm_singledev() {
 
@@ -418,18 +419,8 @@
 
         done
 
-        # Verification results #
-        if [ "$SRM_SDV_MACA" == "null"; then
-
-            # Verification failed #
-            echo 0
-
-        else
-
-            # Verification succeed #
-            echo 1
-
-        fi      
+        # Send results #
+        echo "$SRM_SDV_MACA"
 
     }
 
@@ -571,7 +562,7 @@
                         # Check processing #
                         if (( $SRM_SIG_EXIT == 1 )); then
 
-                            # Remove partially/aborted data #
+                            # Remove partial/aborted data #
                             if [ -d $SRM_EXE_OPOS ]; then rm -rf $SRM_EXE_OPOS; fi
 
                         fi

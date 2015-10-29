@@ -397,7 +397,8 @@
 #
 # This function parses the poses array computed by the module and determines if
 # every poses stored in the array come from the same capture device. If all
-# poses come from the same device, the function answer 1, 0 otherwise.
+# poses come from the same device, the function answer the device MAC address,
+# null otherwise.
 
     function srm_singledev() {
 
@@ -430,18 +431,8 @@
 
         done
 
-        # Verification results #
-        if [ "$SRM_SDV_MACA" == "null"; then
-
-            # Verification failed #
-            echo 0
-
-        else
-
-            # Verification succeed #
-            echo 1
-
-        fi      
+        # Send results #
+        echo "$SRM_SDV_MACA"
 
     }
 
@@ -565,7 +556,7 @@
             # Create rig structure #
             SRM_MVG_DRIG="8\n9\n10\n11\n12\n13\n14\n15"
 
-        elif [ "SRM_MOD_OMGM" == "sp1024" ]; then
+        elif [ "$SRM_MOD_OMGM" == "sp1024" ]; then
 
             # Create model #
             SRM_MVG_CHAN="10.tiff 24.tiff"
@@ -573,7 +564,7 @@
             # Create rig structure #
             SRM_MVG_DRIG="10\n24"
 
-        elif [ "SRM_MOD_OMGM" == "sp1425" ]; then
+        elif [ "$SRM_MOD_OMGM" == "sp1425" ]; then
 
             # Create model #
             SRM_MVG_CHAN="14.tiff 25.tiff"
@@ -909,10 +900,13 @@
                         elif [ "$SRM_MOD_MODE" == "openmvgrig" ]; then
 
                             # Single-device verification #
-                            if (( $(srm_singledev) == 1 )); then
+                            SRM_EXE_SDEV="$(srm_singledev $SRM_PLL_POSE)"
+
+                            # Check single-device verification #
+                            if [ "$SRM_EXE_SDEV" != "null" ]; then
 
                                 # Refinement process #
-                                srm_openmvgrig $SRM_EXE_DEVI
+                                srm_openmvgrig $SRM_EXE_SDEV
 
                             else
 
@@ -947,7 +941,7 @@
                         # Check processing #
                         if (( $SRM_SIG_EXIT == 1 )); then
 
-                            # Remove partially/aborted data #
+                            # Remove partial/aborted data #
                             if [ -d $SRM_EXE_OPOS ]; then rm -rf $SRM_EXE_OPOS; fi
 
                         fi
