@@ -1,6 +1,6 @@
 ## Changelog
 
-### Beta 0.4.1
+### Release 0.4.1 (October 29, 2015)
 
 - `Fixed` : Pose selection function correction
 
