@@ -434,16 +434,6 @@
             # Create model #
             SRM_MVG_CHAN="08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff"
 
-        elif [ "$SRM_MOD_OMGM" == "crownsp" ]; then
-
-            # Create model #
-            SRM_MVG_CHAN="08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff 24.tiff 25.tiff"
-
-        elif [ "$SRM_MOD_OMGM" == "total" ]; then
-
-            # Create model #
-            SRM_MVG_CHAN="01.tiff 02.tiff 03.tiff 04.tiff 05.tiff 06.tiff 07.tiff 08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff 16.tiff 17.tiff 18.tiff 19.tiff 20.tiff 21.tiff 22.tiff 23.tiff 24.tiff 25.tiff"
-
         elif [ "$SRM_MOD_OMGM" == "sp1024" ]; then
 
             # Create model #
@@ -508,7 +498,7 @@
         # Initialize structure #
         mkdir -p $SRM_EXE_OPOS/cluster/images
         mkdir -p $SRM_EXE_OPOS/cluster/matches
-        mkdir -p $SRM_EXE_OPOS/cluster/global
+        mkdir -p $SRM_EXE_OPOS/cluster/omvg
 
         # Initialize options #
         SRM_MVG_CHAN=""
@@ -522,22 +512,6 @@
 
             # Create rig structure #
             SRM_MVG_DRIG="8\n9\n10\n11\n12\n13\n14\n15"
-
-        elif [ "$SRM_MOD_OMGM" == "crownsp" ]; then
-
-            # Create model #
-            SRM_MVG_CHAN="08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff 24.tiff 25.tiff"
-
-            # Create rig structure #
-            SRM_MVG_DRIG="8\n9\n10\n11\n12\n13\n14\n15\n24\n25"
-
-        elif [ "$SRM_MOD_OMGM" == "total" ]; then
-
-            # Create model #
-            SRM_MVG_CHAN="01.tiff 02.tiff 03.tiff 04.tiff 05.tiff 06.tiff 07.tiff 08.tiff 09.tiff 10.tiff 11.tiff 12.tiff 13.tiff 14.tiff 15.tiff 16.tiff 17.tiff 18.tiff 19.tiff 20.tiff 21.tiff 22.tiff 23.tiff 24.tiff 25.tiff"
-
-            # Create rig structure #
-            SRM_MVG_DRIG="0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25"
 
         elif [ "SRM_MOD_OMGM" == "sp1024" ]; then
 
@@ -667,25 +641,10 @@
 
             done
 
-        elif [ "$SRM_MOD_OMGM" == "crown" ] || [ "$SRM_MOD_OMGM" == "crownsp" ] || [ "$SRM_MOD_OMGM" == "total" ]; then
+        elif [ "$SRM_MOD_OMGM" == "crown" ]; then
 
-            # Check assembly #
-            if [ "$SRM_MOD_OMGM" == "crown" ]; then
-
-                # Setting assembly sensor count #
-                SRM_MOD_ASCT=8
-
-            elif [ "$SRM_MOD_OMGM" == "crownsp" ]; then
-
-                # Setting assembly sensor count #
-                SRM_MOD_ASCT=10
-
-            elif [ "$SRM_MOD_OMGM" == "total" ]; then
-
-                # Setting assembly sensor count #
-                SRM_MOD_ASCT=26
-
-            fi
+            # Setting assembly sensor count #
+            SRM_MOD_ASCT=8
 
             # Compute number of poses #
             SRM_MVG_FILE=$(( $SRM_MVG_FILE / $SRM_MOD_ASCT ))
