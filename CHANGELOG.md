@@ -1,8 +1,13 @@
 ## Changelog
 
+### Release 0.4.2 (October 30, 2015)
+
+- `Fixed` : Softwares output redirection in **srm-rectile-cloud**
+
 ### Release 0.4.1 (October 29, 2015)
 
 - `Fixed` : Pose selection function correction
+- `Added` : **srm-rectile-cloud** cluster module for point cloud generation
 
 ### Release 0.4 (October 19, 2015)
 
