@@ -9,6 +9,10 @@
 #
 #       Nils Hamel <n.hamel@foxel.ch>
 #
+# Contributor(s):
+#
+#       Kevin Velickovic <k.velickovic@foxel.ch>
+#
 #
 # This file is part of the FOXEL project <http://foxel.ch>.
 #
@@ -41,6 +45,7 @@
     # Execution variables #
     SRM_KER_FORC="false"
     SRM_KER_MODE="unknown"
+    SRM_KER_FORMAT="unknown"
 
     # Temporary storage variables #
     SRM_TMP_NAME=""
@@ -88,6 +93,9 @@
                 -m)
                     SRM_KER_MODE="$srm_prm"
                 ;;
+                -f)
+                    SRM_KER_FORMAT="$srm_prm"
+                ;;
 
             esac
 
@@ -104,7 +112,7 @@
 
         # Display message #
         >&2 echo "$1"
-        
+
     }
 
 # Timestamps hashing
@@ -180,7 +188,7 @@
         export OMP_NUM_THREADS=$(($SRM_PLL_CONF))
 
         # Extract timestamps #
-        SRM_EXE_TIME=$(basename $SRM_IO_IPOS); 
+        SRM_EXE_TIME=$(basename $SRM_IO_IPOS);
         SRM_EXE_TIME=(${SRM_EXE_TIME//_/ })
 
         # Stitching of upper band #
@@ -225,8 +233,21 @@
         $SRM_TMP_NAME/tmp_mid_band.tiff \
         $SRM_TMP_NAME/tmp_bot_band.tiff &> /dev/null
 
-        # Inject results in storage structure #
-        rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $SRM_IO_OPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff
+        # Check module format #
+        if [ "$SRM_KER_FORMAT" == "tiff" ]; then
+
+            # Inject results in storage structure #
+            rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $SRM_IO_OPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff
+
+        elif [ "$SRM_KER_FORMAT" == "png" ]; then
+
+            # Convert image to requested format #
+            convert -define "png:compression-level=4" $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.png
+
+            # Inject results in storage structure #
+            rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.png $SRM_IO_OPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.png
+
+        fi
 
     }
 
@@ -264,33 +285,43 @@
         # Check module mode #
         if [ "$SRM_KER_MODE" == "enblend" ]; then
 
-            # Check device type #
-            if [ "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
+            # Check output format #
+            if ( [ "$SRM_KER_FORMAT" == "tiff" ] || [ "$SRM_KER_FORMAT" == "png" ] ); then
 
-                # Check pose state #
-                if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
+                # Check device type #
+                if [ "$(srm_askc ${SRM_IO_PART[2]} "type")" == "eyesis4pi" ]; then
 
-                    # Temporary storage #
-                    srm_tmpfs create
+                    # Check pose state #
+                    if ( [ -d $SRM_IO_OPOS ] && [ "$SRM_KER_FORC" == "true" ] ) || [ ! -d $SRM_IO_OPOS ]; then
 
-                    # Remove previous data #
-                    if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
+                        # Temporary storage #
+                        srm_tmpfs create
 
-                    # Create destination pose directory #
-                    mkdir -p $SRM_IO_OPOS
+                        # Remove previous data #
+                        if [ -d $SRM_IO_OPOS ]; then rm -rf $SRM_IO_OPOS; fi
 
-                    # Refinement process #
-                    srm_enblend_eysis4pi
+                        # Create destination pose directory #
+                        mkdir -p $SRM_IO_OPOS
 
-                    # Temporary storage #
-                    srm_tmpfs delete
+                        # Refinement process #
+                        srm_enblend_eysis4pi
+
+                        # Temporary storage #
+                        srm_tmpfs delete
+
+                    fi
+
+                else
+
+                    # Display message and update exit code #
+                    srm_echo "SRM Kernel : Error, unknown device type"; SRM_SIG_EXIT=1
 
                 fi
 
             else
 
                 # Display message and update exit code #
-                srm_echo "SRM Kernel : Error, unknown device type"; SRM_SIG_EXIT=1
+                srm_echo "SRM Kernel : Error, unknown output image format"; SRM_SIG_EXIT=1
 
             fi
 
@@ -305,4 +336,3 @@
 
     # Exit code #
     exit $SRM_SIG_EXIT
-
