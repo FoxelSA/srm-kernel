@@ -46,6 +46,8 @@
     SRM_KER_FORC="false"
     SRM_KER_MODE="unknown"
     SRM_KER_FORMAT="unknown"
+    SRM_KER_WIDTH="unknown"
+    SRM_KER_HEIGHT="unknown"
 
     # Temporary storage variables #
     SRM_TMP_NAME=""
@@ -95,6 +97,12 @@
                 ;;
                 -f)
                     SRM_KER_FORMAT="$srm_prm"
+                ;;
+                -w)
+                    SRM_KER_WIDTH="$srm_prm"
+                ;;
+                -h)
+                    SRM_KER_HEIGHT="$srm_prm"
                 ;;
 
             esac
@@ -236,13 +244,31 @@
         # Check module format #
         if [ "$SRM_KER_FORMAT" == "tiff" ]; then
 
+            # Check output size #
+            if ( [ "$SRM_KER_WIDTH" != "unknown" ] && [ "$SRM_KER_HEIGHT" != "unknown" ] ); then
+
+                # Resize image #
+                convert -resize ${SRM_KER_WIDTH}x${SRM_KER_HEIGHT} $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff
+
+            fi
+
             # Inject results in storage structure #
             rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $SRM_IO_OPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff
 
         elif [ "$SRM_KER_FORMAT" == "png" ]; then
 
-            # Convert image to requested format #
-            convert -define "png:compression-level=4" $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.png
+            # Check output size #
+            if ( [ "$SRM_KER_WIDTH" != "unknown" ] && [ "$SRM_KER_HEIGHT" != "unknown" ] ); then
+
+                # Convert image to requested format #
+                convert -resize ${SRM_KER_WIDTH}x${SRM_KER_HEIGHT} -define "png:compression-level=4" $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.png
+
+            else
+
+                # Convert image to requested format #
+                convert -define "png:compression-level=4" $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.tiff $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.png
+
+            fi
 
             # Inject results in storage structure #
             rsync $SRM_TMP_NAME/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.png $SRM_IO_OPOS/${SRM_EXE_TIME[0]}_${SRM_EXE_TIME[1]}.png

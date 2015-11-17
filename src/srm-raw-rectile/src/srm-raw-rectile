@@ -109,7 +109,7 @@
             SRM_CMD_NORM="$SRM_CMD_NORM $srm_arg $srm_prm"
 
             # Filter arguments and parameters #
-            if [ "${srm_arg:1:1}" != "-" ]; then 
+            if [ "${srm_arg:1:1}" != "-" ]; then
 
                 # Compose simplified command #
                 srm_insert $srm_arg $srm_prm
@@ -184,7 +184,7 @@
 
         # Display message #
         >&2 echo "$1"
-        
+
     }
 
 # Parallel configuration
@@ -200,7 +200,7 @@
         if [ -e $SRM_PLL_CONF ]; then
 
             # Compose parallel command #
-            echo "--sshconfig $SRM_PLL_CONF"
+            echo "--sshloginfile $SRM_PLL_CONF"
 
         else
 
@@ -354,7 +354,7 @@
         if [ ! -d $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/ ] || (( ${#SRM_MOD_IHAS} != 16 )); then
 
             # Display message and update exit code #
-            srm_echo "SRM Kernel : Error, unknown or invalid source node"; SRM_SIG_EXIT=1           
+            srm_echo "SRM Kernel : Error, unknown or invalid source node"; SRM_SIG_EXIT=1
 
         else
 
@@ -466,4 +466,3 @@
 
     # Exit code #
     exit $SRM_SIG_EXIT
-
