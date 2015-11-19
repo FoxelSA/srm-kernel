@@ -387,8 +387,15 @@
                     SRM_ADD_MAIN=(${SRM_EXE_MSSR//// })
                     SRM_ADD_POSE=(${SRM_ADD_MAIN[3]//-/ })
 
+                    # List files to process #
+                    SRM_EXE_LIST=( $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/**/* )
+
+                    # Store files list length and current index #
+                    SRM_EXE_LIST_LEN=${#SRM_EXE_LIST[@]}
+                    SRM_EXE_LIST_INDEX=1
+
                     # Parse pose files #
-                    for SRM_EXE_SRC in $SRM_MNT_BASE/pose/$SRM_MOD_IHAS/data/${SRM_ADD_MAIN[0]}/master/${SRM_ADD_MAIN[1]}/segment/${SRM_ADD_MAIN[2]}/pose/**/*; do
+                    for SRM_EXE_SRC in ${SRM_EXE_LIST[*]}; do
 
                         # Check for directory #
                         if [ -d $SRM_EXE_SRC ]; then
@@ -397,11 +404,14 @@
                             if (( $(srm_selected $(basename $SRM_EXE_SRC) ${SRM_ADD_POSE[0]} ${SRM_ADD_POSE[1]}) == 1 )); then
 
                                 # Update parallel directive #
-                                SRM_PLL_POSE="$SRM_PLL_POSE $SRM_MOD_IHAS,$SRM_MOD_OHAS,${SRM_ADD_MAIN[0]},${SRM_ADD_MAIN[1]},${SRM_ADD_MAIN[2]},$(basename $SRM_EXE_SRC)"
+                                SRM_PLL_POSE="$SRM_PLL_POSE $SRM_MOD_IHAS,$SRM_MOD_OHAS,${SRM_ADD_MAIN[0]},${SRM_ADD_MAIN[1]},${SRM_ADD_MAIN[2]},$(basename $SRM_EXE_SRC),$SRM_EXE_LIST_INDEX,$SRM_EXE_LIST_LEN"
 
                             fi
 
                         fi
+
+                        # Increment index #
+                        SRM_EXE_LIST_INDEX=$((SRM_EXE_LIST_INDEX+1))
 
                     done
 

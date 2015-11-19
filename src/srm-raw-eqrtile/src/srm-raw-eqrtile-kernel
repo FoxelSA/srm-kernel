@@ -104,7 +104,7 @@
 
         # Display message #
         >&2 echo "$1"
-        
+
     }
 
 # Timestamps hashing
@@ -295,7 +295,7 @@
             SRM_EXE_BASE=$(basename $SRM_EXE_FILE)
 
             # Decompose basename #
-            SRM_EXE_ELEM=(${SRM_EXE_BASE//_/ })            
+            SRM_EXE_ELEM=(${SRM_EXE_BASE//_/ })
 
             # Search for split images #
             if [[ $SRM_EXE_BASE == *"_L"* ]]; then
@@ -348,7 +348,7 @@
     else
 
         # Display message #
-        srm_echo "    element ${SRM_IO_PART[5]}"
+        srm_echo "    element ${SRM_IO_PART[5]} [${SRM_IO_PART[6]}/${SRM_IO_PART[7]}]"
 
         # Check module mode #
         if [ "$SRM_KER_MODE" == "elphel-plugin" ]; then

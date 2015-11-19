@@ -306,7 +306,7 @@
     else
 
         # Display message #
-        srm_echo "    element ${SRM_IO_PART[5]}"
+        srm_echo "    element ${SRM_IO_PART[5]} [${SRM_IO_PART[6]}/${SRM_IO_PART[7]}]"
 
         # Check module mode #
         if [ "$SRM_KER_MODE" == "enblend" ]; then

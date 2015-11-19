@@ -104,7 +104,7 @@
 
         # Display message #
         >&2 echo "$1"
-        
+
     }
 
 # Timestamps hashing
@@ -199,7 +199,7 @@
                 SRM_CHN_LIST="24 25"
 
             else
-            
+
                 # Compose module channels array #
                 SRM_CHN_LIST="$(printf '%02d' $(($SRM_IDX_MODE-1))) $(printf '%02d' $(($SRM_IDX_MODE+7))) $(printf '%02d' $(($SRM_IDX_MODE+15)))"
 
@@ -271,7 +271,7 @@
     else
 
         # Display message #
-        srm_echo "    element ${SRM_IO_PART[5]}"
+        srm_echo "    element ${SRM_IO_PART[5]} [${SRM_IO_PART[6]}/${SRM_IO_PART[7]}]"
 
         # Check module mode #
         if [ "$SRM_KER_MODE" == "dcraw" ]; then
@@ -317,4 +317,3 @@
 
     # Exit code #
     exit $SRM_SIG_EXIT
-
